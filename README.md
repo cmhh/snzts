@@ -48,7 +48,7 @@ docker-compose up -d
 
 The back-end database is created from CSV files on start-up, so takes about a minute to fully start.  Once running, the service will be available at `localhost:9000/snzts/`.
 
-The data in the backend will date quickly.  To update it, a fresh set can be pulled from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/) via the `scraper` container.  To build and run the container:
+The data in the backend will date quickly.  To update it, a fresh set can be pulled from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/) via the `scraper` container:
 
 ```
 docker run -d --rm -v `pwd`:/work snzts-scraper
