@@ -42,3 +42,16 @@ docker run -d --rm -v `pwd`:/work snzts-scraper
 ```
 
 Once done, a file called `csv.zip` will appear in the present working directory.  Simply copy this to `docker/backend` and rebuild the `snzts-backend` container.  Note that this image will run as root, so it is likely you will need sudo access to delete or modify it.  This will likely be updated to run as an ordinary user at some point.
+
+## Using with Nginx
+
+Using Nginx as a reverse proxy is relatively straightforward.  Simply add the following location directive to your server config:
+
+```
+   location /snzts/ {
+     proxy_pass http://127.0.0.1:9000/snzts/;
+     proxy_http_version 1.1;
+     proxy_set_header Upgrade $http_upgrade;
+     proxy_set_header Connection "upgrade";
+   }
+```
