@@ -1,0 +1,702 @@
+@()
+
+@main("API Documentation") {
+  <link rel="stylesheet" href="@routes.Assets.versioned("highlight/styles/default.css")">
+  <script src="@routes.Assets.versioned("highlight/highlight.pack.js")"></script>
+  <script src="@routes.Assets.versioned("javascripts/highlight.js")" type="text/javascript"></script>
+
+  <h1><code>limit</code></h1>
+
+  In order to manage server load, it is possible to impose an upper limit on the <code>limit</code> parameter for the <code>info</code> and <code>dataset</code> endpoints.  The <code>limit</code> endpoint will simply return the value that has been set, or else <code>null</code> if there is no limit.
+
+  <h2>Usage</h2>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/limit</div></div>
+  
+  <pre><code class="json">{
+  "series_limit": 500
+}</code></pre>
+
+  <h1><code>subjects</code></h1>
+
+  <p>List available subjects.</p>
+
+  <h2>Parameters</h2>
+
+  <table class="parameters">
+    <thead>
+      <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>format</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Output format.  One of <code>CSV</code> or <code>JSON</code>.  Defaults to <code>JSON</code>.</td>
+        </tr>
+        <tr>
+          <td><code>subjectCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Subject code.  For example, <code>HLF</code>, <code>LCI</code>, <code>BOP</code>, <code>CPI</code>, etc. </td>
+        </tr>
+        <tr>
+          <td><code>subjectKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for subject.</td>
+        </tr>
+    </tbody>
+  </table>
+
+  <h2>Usage</h2>
+
+  <p>The basic format is:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/subjects?format=json&subjectCode=value&subjectKeyword=value&subjectKeyword=value&...</div></div>
+
+  <p>For example:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/subjects?format=json&subjectCode=HLF</div></div>
+  
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "title_text": "Household Labour Force Survey - HLF"
+  }
+]</code></pre>
+
+  <p>or:</p>
+  
+  <div class=example><div class=type>GET</div><div class=url>/v1/subjects?format=json&subjectKeyword=Labour</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "title_text": "Household Labour Force Survey - HLF"
+  },
+  {
+    "subject_code": "LCI",
+    "title_text": "Labour Cost Index - LCI"
+  }
+]</code></pre>
+
+
+  <h1><code>families</code></h1>
+
+  <p>List available families.</p>
+
+  <h2>Parameters</h2>
+
+  <table class="parameters">
+    <thead>
+        <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>format</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Output format.  One of <code>CSV</code> or <code>JSON</code>.  Defaults to <code>JSON</code>.</td>
+        </tr>
+        <tr>
+          <td><code>subjectCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Subject code.  For example, <code>HLF</code>, <code>LCI</code>, <code>BOP</code>, <code>CPI</code>, etc.</td>
+        </tr>
+        <tr>
+          <td><code>familyCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Family code.  For example, <code>SA</code>.</td>
+        </tr>
+        <tr>
+          <td><code>familyNbr</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Family number.</td>
+        </tr>
+        <tr>
+          <td><code>subjectKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for subject.</td>
+        </tr>
+        <tr>
+          <td><code>familyKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for family.</td>
+        </tr>
+    </tbody>
+  </table>
+
+  <h2>Usage</h2>
+
+  <p>The basic format is:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/families?format=json&subjectCode=value&familyCode=value&familyNbr=value&subjectKeyword=value&subjectKeyword=value&...&familyKeyword=value&familyKeyword=value&...</div></div>
+
+  <p>For example:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/families?format=json&subjectCode=HLF&familyCode=SA</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "title_text": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group"
+  },
+  {
+    "subject_code": "HLF",
+    "family_code": "SA",
+    "family_nbr": 4327,
+    "title_text": "SA - Labour Force Status by Sex by Age Group - Sampling Errors"
+  }
+]</code></pre>
+
+  <p>or:</p>
+  
+  <div class=example><div class=type>GET</div><div class=url>/v1/families?format=json&familyKeyword=building&familyKeyword=region</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "BAS",
+    "family_code": "SA",
+    "family_nbr": 4682,
+    "title_text": "Building activity by region"
+  },
+  {
+    "subject_code": "BLD",
+    "family_code": "SF",
+    "family_nbr": 4686,
+    "title_text": "Building consents by region"
+  }
+]</code></pre>
+
+  <h1><code>info</code></h1>
+
+  <p>Description of available time series.</p>
+
+  <h2>Parameters</h2>
+
+  <table class="parameters">
+    <thead>
+        <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>format</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Output format.  One of <code>CSV</code>, or <code>JSON</code>.  Defaults to <code>JSON</code>.</td>
+        </tr>
+        <tr>
+          <td><code>subjectCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Subject code.  For example, <code>HLF</code>, <code>LCI</code>, <code>BOP</code>, <code>CPI</code>, etc.</td>
+        </tr>
+        <tr>
+          <td><code>familyCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Family code.  For example, <code>SA</code>.</td>
+        </tr>
+        <tr>
+          <td><code>familyNbr</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Family number.</td>
+        </tr>
+        <tr>
+          <td><code>seriesCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Series code.  For example, <code>HLFQ.SAA1AZ</code>.</td>
+        </tr>
+        <tr>
+          <td><code>subjectKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for subject.</td>
+        </tr>
+        <tr>
+          <td><code>familyKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for family.</td>
+        </tr>
+        <tr>
+          <td><code>seriesKeyword</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Search term for series.</td>
+        </tr>
+        <tr>
+          <td><code>interval</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Interval.  <code>1</code> denotes monthly, <code>3</code> denotes quarterly, and <code>12</code> denotes annual.</td>
+        </tr>
+        <tr>
+          <td><code>offset</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Offset month.  For example, <code>3</code> denotes the March quarter for quartely data.</td>
+        </tr>
+        <tr>
+          <td><code>limit</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Series limit.  Limits the number of results returned.</td>
+        </tr>
+        <tr>
+          <td><code>drop</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Used in conjunction with <code>limit</code> to access results in batches.  For example, setting <code>limit</code> to 100 and <code>drop</code> to 100 would yield results 101 through 200.</td>
+        </tr>
+    </tbody>
+  </table>
+
+  <h2>Usage</h2>
+
+  <p>The basic format is:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/info?format=json&subjectCode=value&subjectCode=value&...&familyCode=value&familyCode=value&...&familyNbr=value&familyNbr=value&...&seriesCode=value&seriesCode=value&...&subjectKeyword=value&subjectKeyword=value&...&familyKeyword=value&familyKeyword=value&...&seriesKeyword=value&seriesKeyword=value&...&interval=value&offset=value&limit=value&drop=value</div></div>
+
+  <p>For example:</p>
+  
+  <div class=example><div class=type>GET</div><div class=url>/v1/info?format=json&subjectCode=HLF&familyCode=SA&familyNbr=7&seriesKeyword=employment%20rate&seriesKeyword=female&seriesKeyword=15-19&interval=3</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "series_code": "HLFQ.SAF2AA",
+    "series_nbr": 2059,
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_title": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group",
+    "interval": 3,
+    "offset": 3,
+    "magnitude": 0,
+    "unit": "Percent",
+    "variables": [
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Unemployment Rate",
+      "Female",
+      "Aged 15-19 Years"
+    ]
+  },
+  {
+    "subject_code": "HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "series_code": "HLFQ.SAH2AA",
+    "series_nbr": 3099244,
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_title": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group",
+    "interval": 3,
+    "offset": 3,
+    "magnitude": 0,
+    "unit": "Percent",
+    "variables": [
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Employment Rate",
+      "Female",
+      "Aged 15-19 Years"
+    ]
+  }
+]</code></pre>
+
+
+  <h1><code>series</code></h1>
+
+  <p>Time series data by identifier.</p>
+
+  <h2>Parameters</h2>
+
+  <table class="parameters">
+    <thead>
+        <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>format</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Output format.  One of <code>CSV</code>, <code>JSON</code>, or <code>CHART</code>.  <code>CHART</code> produces a highchart.  Defaults to <code>JSON</code>.</td>
+        </tr>
+        <tr>
+          <td><code>seriesCode</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10004;</td>
+          <td>Series identifier.  For example, <code>HLFQ.SAA1AZ</code>.</td>
+        </tr>
+        <tr>
+          <td><code>start</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>Start date.  For example, <code>1986.03</code>.</td>
+        </tr>
+        <tr>
+          <td><code>end</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>End date.  For example, <code>2018.12</code>.</td>
+        </tr>
+        <tr>
+          <td><code>head</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>How many values at the head of each series to keep.</td>
+        </tr>
+        <tr>
+          <td><code>tail</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>How many values at the tail of each series to keep.</td>
+        </tr>
+        <tr>
+          <td><code>title</code></td>
+          <td class="center">&#10004;</td>
+          <td class="center">&#10007;</td>
+          <td>A title to be used if selected format is <code>CHART</code>.</td>
+        </tr>
+    </tbody>
+  </table>
+
+  <h2>Usage</h2>
+
+  <p>The basic format is:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/series?format=json&seriesCode=value&seriesCode=value&...&start=value&end=tail&head=value&tail=value</div></div>
+
+  <p>For example:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/series?format=json&seriesCode=HLFQ.SAA1AZ&seriesCode=HLFQ.SAA2AZ&start=2017.03</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "family_title": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group",
+    "series_code": "HLFQ.SAA1AZ",
+    "series_nbr": 1878,
+    "interval": 3,
+    "magnitude": 3,
+    "offset": 3,
+    "units": "Number",
+    "variables": [
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Persons Employed in Labour Force",
+      "Male",
+      "Total All Ages"
+    ],
+    "period": [
+      "2017.03",
+      "2017.06",
+      "2017.09",
+      "2017.12",
+      "2018.03",
+      "2018.06",
+      "2018.09",
+      "2018.12"
+    ],
+    "value": [
+      1352,
+      1341.7,
+      1360.1,
+      1381.7,
+      1387.1,
+      1381.1,
+      1388.1,
+      1392.1
+    ],
+    "status": [
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL"
+    ]
+  },
+  {
+    "subject_code": "HLF",
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "family_title": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group",
+    "series_code": "HLFQ.SAA2AZ",
+    "series_nbr": 1890,
+    "interval": 3,
+    "magnitude": 3,
+    "offset": 3,
+    "units": "Number",
+    "variables": [
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Persons Employed in Labour Force",
+      "Female",
+      "Total All Ages"
+    ],
+    "period": [
+      "2017.03",
+      "2017.06",
+      "2017.09",
+      "2017.12",
+      "2018.03",
+      "2018.06",
+      "2018.09",
+      "2018.12"
+    ],
+    "value": [
+      1195,
+      1188.8,
+      1214.6,
+      1237.8,
+      1239.3,
+      1242.3,
+      1259.8,
+      1252
+    ],
+    "status": [
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL"
+    ]
+  }
+]</code></pre>
+
+  <p>or (and note that the <code>chart</code> format is a very minimal implementation, for illustrative purposes only):</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/series?format=chart&id=HLFQ.SAA3AZ&id=HLFQ.S1A3S&id=HLFQ.S4A3S&tail=12</div></div>
+
+  <iframe src="/snzts/v1/series?format=chart&seriesCode=HLFQ.SAA3AZ&seriesCode=HLFQ.S1A3S&seriesCode=HLFQ.S4A3S&tail=12"></iframe>
+
+
+  <h1><code>dataset</code></h1>
+
+  <p>Time series data.</p>
+
+  <h2>Parameters</h2>
+
+  <table class="parameters">
+    <thead>
+      <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>format</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Output format.  One of <code>CSV</code>, or <code>JSON</code>.  Defaults to <code>JSON</code>.</td>
+      </tr>
+      <tr>
+        <td><code>subjectCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Subject code.  For example, <code>HLF</code>, <code>LCI</code>, <code>BOP</code>, <code>CPI</code>, etc.</td>
+      </tr>
+      <tr>
+        <td><code>familyCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Family code.  For example, <code>SA</code>.</td>
+      </tr>
+      <tr>
+        <td><code>familyNbr</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Family number.</td>
+      </tr>
+      <tr>
+        <td><code>seriesCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Series code.  For example, <code>HLFQ.SAA1AZ</code>.</td>
+      </tr>
+      <tr>
+        <td><code>subjectKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for subject.</td>
+      </tr>
+      <tr>
+        <td><code>familyKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for family.</td>
+      </tr>
+      <tr>
+        <td><code>seriesKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for series.</td>
+      </tr>
+      <tr>
+        <td><code>interval</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Interval.  <code>1</code> denotes monthly, <code>3</code> denotes quarterly, and <code>12</code> denotes annual.</td>
+      </tr>
+      <tr>
+        <td><code>offset</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Offset month.  For example, <code>3</code> denotes the March quarter for quartely data.</td>
+      </tr>
+      <tr>
+        <td><code>limit</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Series limit.  Limits the number of results returned.</td>
+      </tr>
+      <tr>
+        <td><code>drop</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Used in conjunction with <code>limit</code> to access results in batches.  For example, setting <code>limit</code> to 100 and <code>drop</code> to 100 would yield results 101 through 200.</td>
+      </tr>
+      <tr>
+        <td><code>head</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>How many values at the head of each series to keep.</td>
+      </tr>
+      <tr>
+        <td><code>tail</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>How many values at the tail of each series to keep.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Example requests</h2>
+
+  <p>The basic format is:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/dataset?format=json&subjectCode=value&subjectCode=value&...&familyCode=value&familyCode=value&...&familyNbr=value&familyNbr=value&...&seriesCode=value&seriesCode=value&...&subjectKeyword=value&subjectKeyword=value&...&familyKeyword=value&familyKeyword=value&...&seriesKeyword=value&seriesKeyword=value&...&interval=value&offset=value&limit=value&drop=value&head=value&tail=value</div></div>
+
+  <p>For example:</p>
+
+  <div class=example><div class=type>GET</div><div class=url>/v1/dataset?format=json&subjectCode=HLF&familyCode=SA&seriesKeyword=15-19&seriesKeyword=Female&seriesKeyword=Unemployed&tail=4</div></div>
+
+  <pre><code class="json">[
+  {
+    "subject_code": "HLF",
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_code": "SA",
+    "family_nbr": 7,
+    "family_title": "Persons Employed, Unemployed, Not in Labour Force by Sex by Age Group",
+    "series_code": "HLFQ.SAB2AA",
+    "series_nbr": 1915,
+    "interval": 3,
+    "magnitude": 3,
+    "offset": 3,
+    "units": "Number",
+    "variables": [
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Persons Unemployed in Labour Force",
+      "Female",
+      "Aged 15-19 Years"
+    ],
+    "period": [
+      "2018.03",
+      "2018.06",
+      "2018.09",
+      "2018.12"
+    ],
+    "value": [
+      13.9,
+      12.9,
+      9.5,
+      13
+    ],
+    "status": [
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL"
+    ]
+  },
+  {
+    "subject_code": "HLF",
+    "subject_title": "Household Labour Force Survey - HLF",
+    "family_code": "SA",
+    "family_nbr": 4327,
+    "family_title": "SA - Labour Force Status by Sex by Age Group - Sampling Errors",
+    "series_code": "HLFQ.SASEB2AA",
+    "series_nbr": 3265428,
+    "interval": 3,
+    "magnitude": 3,
+    "offset": 3,
+    "units": "Number",
+    "variables": [
+      "Sampling Errors",
+      "Persons Employed, Unemployed, Not in Labour Force (for current quarter)",
+      "Sex",
+      "Age Group"
+    ],
+    "outcomes": [
+      "Sampling errors",
+      "Persons Unemployed in Labour Force",
+      "Female",
+      "Aged 15-19 Years"
+    ],
+    "period": [
+      "2018.03",
+      "2018.06",
+      "2018.09",
+      "2018.12"
+    ],
+    "value": [
+      2.9,
+      2.6,
+      2.5,
+      2.6
+    ],
+    "status": [
+      "FINAL",
+      "FINAL",
+      "FINAL",
+      "FINAL"
+    ]
+  }
+]</code></pre>
+
+}

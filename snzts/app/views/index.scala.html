@@ -1,0 +1,33 @@
+@()
+
+@main("Time Series Data") {  
+
+  <div>
+  <form>
+    <div class="label">subject keyword:</div>
+    <input type=text name=subject class="text-input" id="subjectKeywords"><br>
+    <div class="label">family keyword:</div>
+    <input type=text name=family class="text-input" id="familyKeywords"><br>
+    <div class="button" id="search">search</div>
+  </form>
+  </div>
+
+  <h1>Datasets</h1>
+
+  <div id="search-results">
+    <table id="results-tab">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Family Code</th>
+          <th>Family Number</th>
+          <th>Title</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="@routes.Assets.versioned("javascripts/series_search.js")" type="text/javascript"></script>
+}

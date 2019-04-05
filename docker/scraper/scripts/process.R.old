@@ -1,0 +1,385 @@
+# load libraries ---------------------------------------------------------------
+message("loading packages...")
+library(fs)
+library(dplyr)
+library(data.table)
+library(sqldf)
+
+# globals ----------------------------------------------------------------------
+message("getting workspace ready...")
+dlpath <- "work/downloads"
+datpath <- "/data"
+outpath <- "work/output"
+workpath <- "work"
+
+create_if_not <- function(dname) {
+  if (dir_exists(dname)) TRUE
+  else dir_create(dname, recursive = TRUE)
+}
+
+create_if_not(outpath)
+create_if_not(sprintf("%s/csv", outpath))
+create_if_not(workpath)
+
+# utilities --------------------------------------------------------------------
+`%|%` <- function(x, y) {
+  sprintf("%s%s", x, y)
+}
+
+`%p%` <- function(x, y) {
+  sprintf("%s/%s", x, y)
+}
+
+ltrim <- function(x) {
+  if (substr(x, 1, 1) == " ") ltrim(substr(x, 2, nchar(x)))
+  else x
+}
+
+rtrim <- function(x) {
+  if (substr(x, nchar(x), nchar(x)) == " ") rtrim(substr(x, 1, nchar(x) - 1))
+  else x
+}
+
+trim <- function(x) ltrim(rtrim(x))
+
+is_csv <- function(x) {
+  tolower(tail(strsplit(x, '.', fixed = TRUE)[[1]], 1)) == "csv"
+}
+
+is_zip <- function(x) {
+  tolower(tail(strsplit(x, '.', fixed = TRUE)[[1]], 1)) == "zip"
+}
+
+left <- function(x, take = 1) {
+  if (nchar(x) <= take) x
+  else substr(x, 1, take)
+}
+
+right <- function(x, take = 1) {
+  if (nchar(x) <= take) x
+  else substr(x, nchar(x) - take + 1, nchar(x))
+}
+
+drop <- function(x, n = 1) {
+  if (nchar(x) <= n) ""
+  else substr(x, n + 1, nchar(x))
+}
+
+parse_cats <- function(ref, template, res = "") {
+  if (nchar(ref)==0) res
+  else 
+    parse_cats(drop(ref), drop(template),
+               sprintf("%s%s", res, ifelse(left(template) %in% c("&", "-"), left(ref), "")))
+}
+
+swap_na <- function(x, with = "") ifelse(is.na(x), with, x)
+
+rm_nl <- function(x) gsub("\n", "", gsub("\r\n", "", x, fixed = TRUE), fixed = TRUE)
+
+# extract zip files ------------------------------------------------------------
+message("extracting zip files...")
+extract_zip_files <- function() {
+  ext <- function(x) {
+    tolower(tail(strsplit(x, '.', fixed = TRUE)[[1]], 1))
+  }
+  
+  f <- dir(dlpath, full.names = TRUE)
+  is_zip <- sapply(f, function(x) ext(x) == "zip") %>% setNames(NULL)
+  
+  lapply(f[is_zip], 
+       function(x) {
+         unzip(x, exdir = dlpath)
+         file_delete(x)
+       })
+}
+
+extract_zip_files()
+
+# flatten and remove directories -----------------------------------------------
+message("flattening downloads...")
+flatten <- function() {
+  f <- dir(dlpath, full.names = TRUE)
+  
+  is_dir <- sapply(f, function(x) is_dir(x)) %>% 
+    setNames(NULL)
+  
+  lapply(f[is_dir], function(x) {
+    sapply(dir(x, full.names = TRUE), function(x) {
+      file_move(x, dlpath)
+    })
+    dir_delete(x)
+  })
+}
+
+flatten()
+
+# import csv files -------------------------------------------------------------
+message("importing csv data...")
+import_tsm <- function() {
+  is_tsm <- function(fname) {
+    tryCatch({
+      x <- fread(fname, nrows = 10)
+      cols <- tolower(colnames(x))
+      all(c("series_reference", "period", "data_value") %in% cols)
+    }, error = function(e) {
+      FALSE
+    })
+  }
+  
+  read_tsm <- function(fname) {
+    res <- fread(fname, verbose = FALSE, showProgress = FALSE, integer64 = "numeric") %>%
+      setNames(tolower(colnames(.))) %>%
+      mutate(data_value = as.numeric(data_value))
+    col <- colnames(res)
+    col <- col[tolower(col) %in% 
+                 c("series_reference", "period", "data_value", "status", "units", 
+                   "magnitude", "magntude")]
+    res <- res %>% 
+      select(!!!rlang::syms(col)) %>% 
+      setNames(tolower(colnames(.))) %>%
+      mutate(data_value = as.numeric(data_value))
+    if ("magntude" %in% tolower(col))
+      res <- res %>%
+        rename(magnitude = magntude)
+    if (!"magnitude" %in% colnames(res))
+      res <- res %>%
+        mutate(magnitude = NA)
+    if (!is.numeric(res$data_value)) 
+      res <- res %>%
+        mutate(data_value = 
+                 ifelse(tolower(data_value) == "Not Available", NA, data_value) %>% 
+                 as.numeric)
+    res <- res %>% 
+      select(series_reference, period, data_value, status, units, magnitude) %>%
+      mutate(series_reference = toupper(series_reference),
+             status = toupper(status),
+             units = toupper(units))
+  }
+  
+  f <- dir(dlpath, pattern = "*.csv", full.names = TRUE)
+  f_tsm <- f[sapply(f, is_tsm)]
+  f_nontsm <- f[!sapply(f, is_tsm)]
+  warning(sprintf("Skipping the following: \n\t%s", paste(f_nontsm, collapse = "\n\t")))
+  res <- lapply(f_tsm, 
+         function(x) {
+           message(sprintf("\t%s...", x))
+           tryCatch(read_tsm(x), 
+                    error = function(e) cat(sprintf("\t\toooops - '%s' failed.\n", x)))}) %>% 
+    bind_rows %>% 
+    arrange(series_reference, period)
+  
+  q <- "
+  select 
+    *, 
+    row_number() over(partition by series_reference, period 
+      order by series_reference, period) as n 
+  from 
+    res"
+  
+  res <- sqldf(q, drv = "SQLite") %>% 
+    filter(n == 1) %>% 
+    select(-n) %>%
+    mutate(period = sprintf("%.2f", period)) %>%
+    group_by(series_reference) %>%
+    mutate(m = row_number(),
+           n = n() - row_number() + 1)
+  
+}
+
+tsm_data <- import_tsm()
+ids <- tsm_data %>% select(series_reference) %>% unique
+
+# import metadata --------------------------------------------------------------
+message("importing metadata...")
+tsm_series_hdr <- readRDS(datpath %p% "tsm_series_hdr.rds") %>% 
+  inner_join(ids, by = c("ref_text" = "series_reference"))
+
+tsm_family <- readRDS(datpath %p% "tsm_family.rds") %>% 
+  mutate(title_text = rm_nl(title_text)) %>%
+  inner_join(tsm_series_hdr %>% select(family_nbr) %>% unique, by = "family_nbr") %>%
+  mutate(title_text = gsub("\r\n", "", title_text, fixed = TRUE))
+
+tsm_subject <- readRDS(datpath %p% "tsm_subject.rds") %>%
+  mutate(title_text = rm_nl(title_text)) %>%
+  inner_join(tsm_family %>% select(subject_code) %>% unique, by = "subject_code")
+
+tsm_sub_family <- readRDS(datpath %p% "tsm_sub_family.rds") %>%
+  inner_join(tsm_series_hdr %>% select(family_nbr) %>% unique, by = "family_nbr")
+  
+tsm_family_classfn <- readRDS(datpath %p% "tsm_family_classfn.rds") %>%
+  inner_join(tsm_series_hdr %>% select(family_nbr) %>% unique, by = "family_nbr")
+
+tsm_tsm_classfn <- readRDS(datpath %p% "tsm_tsm_classfn.rds") %>%
+  inner_join(tsm_family_classfn %>% select(tsm_classfn_nbr) %>% unique, 
+             by = "tsm_classfn_nbr")
+
+message("\tclassfn1...")
+classfn1 <- tsm_tsm_classfn %>%
+  select(cars_classfn_nbr) %>%
+  distinct %>%
+  rename(classfn_nbr = cars_classfn_nbr)
+
+message("\tclassfn2...")
+classfn2 <- tsm_tsm_classfn %>%
+  select(cars_classfn_nbr, cars_level_nbr) %>%
+  distinct %>%
+  rename(classfn_nbr = cars_classfn_nbr, classfn_level_nbr = cars_level_nbr)
+
+message("\tcars_all_classfn...")
+cars_all_classfn <- readRDS(datpath %p% "cars_all_classfn.rds") %>% 
+  mutate(title_text = rm_nl(title_text)) %>%
+  inner_join(classfn1, by = "classfn_nbr")
+
+message("\tcars_all_classfn_level...")
+cars_all_classfn_level <- readRDS(datpath %p% "cars_all_classfn_level.rds") %>%
+  mutate(name_text = rm_nl(name_text)) %>%
+  inner_join(classfn2, by = c("classfn_nbr", "classfn_level_nbr"))
+
+message("\tcars_all_full_category...")
+cars_all_full_category <- readRDS(datpath %p% "cars_all_full_category.rds") %>%
+  mutate(descriptor_text = rm_nl(descriptor_text)) %>%
+  inner_join(classfn2, by = c("classfn_nbr", "classfn_level_nbr")) %>%
+  mutate(cat_code = sapply(cat_code, trim) %>% setNames(NULL),
+         descriptor_text = sapply(descriptor_text, trim) %>% setNames(NULL))
+
+# subset tsm / cars data and reshape -------------------------------------------
+message("\ttsm_series_hdr...")
+tsm_series_hdr <- tsm_series_hdr %>% 
+  inner_join(tsm_sub_family %>% 
+               select(family_nbr, series_interval_nbr, mnth_offset_nbr, 
+                      disabled_ind, series_ref_template_text), 
+             by = c("family_nbr", "series_interval_nbr", 
+                    "mnth_offset_nbr", "disabled_ind")) %>%
+  mutate(cats = apply(cbind(ref_text, series_ref_template_text), 1, 
+                      function(x) parse_cats(x[1], x[2]))) %>%
+  select(-series_ref_template_text)
+
+# normalise tsm_data further ---------------------------------------------------
+q <- "
+select distinct series_reference, units, magnitude from tsm_data
+"
+tsm_series_units <- sqldf(q, drv = "RSQLite")
+tsm_data <- tsm_data %>% select(series_reference, period, data_value, status, m, n)
+
+# make some 'views' ------------------------------------------------------------
+message("tsm_cats_v...")
+tsm_cats_v <- sqldf("
+SELECT
+  tfc.family_nbr, tfc.classfn_seq_nbr, cac.title_text, cafc.cat_code, cafc.descriptor_text
+FROM
+  tsm_family_classfn as tfc
+INNER JOIN
+  cars_all_classfn as cac
+ON
+  tfc.classfn_nbr = cac.classfn_nbr
+INNER JOIN
+  cars_all_full_category as cafc
+ON
+  tfc.classfn_nbr = cafc.classfn_nbr
+  and tfc.classfn_level_nbr = cafc.classfn_level_nbr
+ORDER BY
+  tfc.family_nbr, tfc.classfn_seq_nbr, cafc.cat_code                    
+", drv = "SQLite")
+
+message("tsm_cats_wide_v...")
+get_level <- function(x, fam) {
+  e <- lapply(c("title_text", "cat_code", "descriptor_text"), rlang::parse_quosure) %>%
+    setNames(sprintf("%s_%s", c("title", "code", "description"), x))
+  tsm_cats_v %>% 
+    filter(family_nbr == fam) %>%
+    filter(classfn_seq_nbr == x) %>%
+    rename(!!!e) %>%
+    select(-classfn_seq_nbr)
+}
+
+cats <- tsm_series_hdr %>% 
+  select(family_nbr, cats) %>% 
+  distinct %>% arrange(family_nbr, cats)
+
+tsm_cats_wide_v <- lapply(unique(tsm_cats_v$family_nbr), 
+             function(x){
+               get_level(1, x) %>%
+                 full_join(get_level(2, x), by = "family_nbr") %>%
+                 full_join(get_level(3, x), by = "family_nbr") %>%
+                 full_join(get_level(4, x), by = "family_nbr") %>%
+                 full_join(get_level(5, x), by = "family_nbr") %>%
+                 mutate(cats = sprintf("%s%s%s%s%s", 
+                        swap_na(code_1), swap_na(code_2), 
+                        swap_na(code_3), swap_na(code_4), swap_na(code_5))) %>%
+                 select(family_nbr, cats,
+                        title_1, title_2, title_3, title_4, title_5,
+                        code_1, code_2, code_3, code_4, code_5,
+                        description_1, description_2, description_3, 
+                        description_4, description_5) %>%
+                 arrange(code_1, code_2, code_3, code_4, code_5) %>%
+                 inner_join(cats, by = c("family_nbr", "cats"))
+             }) %>%
+  bind_rows
+
+rm(cats)
+
+message("family...")
+family <- sqldf("
+SELECT 
+  distinct
+  tf.subject_code, tf.ref_code as family_code, tf.family_nbr, 
+  tf.title_text, 
+  tlw.title_1, tlw.title_2, tlw.title_3, tlw.title_4, tlw.title_5
+FROM
+  tsm_family tf
+INNER JOIN
+  tsm_cats_wide_v tlw
+ON
+  tf.family_nbr = tlw.family_nbr
+ORDER BY
+  tf.family_nbr, tf.ref_code, tlw.cats
+", drv = "SQLite")
+
+message("series...")
+series <- sqldf("
+SELECT
+  tf.subject_code, tf.ref_code as family_code, tf.family_nbr, 
+  tsh.ref_text as series_code, 
+  tsh.series_interval_nbr, tsh.mnth_offset_nbr, tsh.magnitude_nbr, tsh.unit_text, 
+  tcw.code_1, tcw.code_2, tcw.code_3, tcw.code_4, tcw.code_5,
+  tcw.description_1, tcw.description_2, tcw.description_3, tcw.description_4, tcw.description_5
+FROM
+  tsm_series_hdr tsh
+INNER JOIN
+  tsm_family tf
+ON
+  tsh.family_nbr = tf.family_nbr
+INNER JOIN
+  tsm_cats_wide_v tcw
+ON
+  tsh.family_nbr = tcw.family_nbr
+  AND tsh.cats = tcw.cats
+", drv = "SQLite")
+
+
+# write to disk ----------------------------------------------------------------
+message("save csv files to disk...")
+write_csv <- function(x, file, ...) 
+  write.csv(x, file = file, row.names = FALSE, na = "", ...)
+
+write_csv(tsm_subject, 
+          file = outpath %p% "csv/subject.csv", quote = FALSE)
+write_csv(family, 
+          file = outpath %p% "csv/family.csv")
+write_csv(series, 
+          file = outpath %p% "csv/series.csv")
+write_csv(tsm_data %>% rename(series_code = series_reference, value = data_value), 
+          file = outpath %p% "csv/data.csv", quote = FALSE)
+
+message("archiving...")
+zip(workpath %p% "csv.zip", dir(outpath %p% "csv", full.names = TRUE), flags = '-rj')
+
+message("tidying up...")
+dir_delete(dlpath)
+dir_delete(outpath)
+
+# tidy up ----------------------------------------------------------------------
+rm(list=ls())
+gc()
+
+message("all done!")
