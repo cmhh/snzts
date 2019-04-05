@@ -216,3 +216,21 @@ a.back-to-top {
 #back-to-top {
   display: inline;
 }
+
+.left {
+  display: inline-block;
+  text-align: left;
+}
+
+.right {
+  float: right;
+}
+
+.small {
+  font-size: 70%;
+}
+
+:visited.plain {
+  color: inherit;
+  text-decoration: none;
+}
