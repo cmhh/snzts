@@ -1,10 +1,10 @@
 # Statistics New Zealand Time Series Data Service
 
-This repository contains tools to:
+This repository contains:
 
-* scrape time series data from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/)
-* reshape the downloaded files
-* publish the downloaded files via a webservice.
+* tools to scrape and reshape time series data from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/)
+* a data service which exposes the scraped data
+* a basic R package which serves as a prototype client library for the data service.
 
 **Note: I work for Stats NZ, and it would not have been possible to reshape the data without arranging for the release of some internally-held metadata.**
 
