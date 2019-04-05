@@ -1,0 +1,16 @@
+version: "3.5"
+services:
+  backend:
+    image: "snzts-backend"
+    container_name: backend
+    network_mode: "host"
+    ports:
+      - 5432:5432
+  api:
+    image: "snzts-api"
+    container_name: api
+    network_mode: "host"
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
