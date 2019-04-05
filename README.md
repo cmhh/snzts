@@ -12,13 +12,13 @@ This repository contains tools to:
 
 The service consists of the data service itself, but also a basic index page which can be used to search time series families, as well as API documentation.
 
-![index](img/index)
+![index](img/index.png)
 
-![docs](img/docs)
+![docs](img/docs.png)
 
-![docs](img/chart)
+![docs](img/chart.png)
 
-![docs](img/dataset)
+![docs](img/dataset.png)
 
 
 ## Docker Containers
