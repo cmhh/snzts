@@ -1,4 +1,4 @@
-# Statistics New Zealand Time Series Data Service - R Package
+# Stats NZ Time Series Data Service - R Package
 
 This repository contains an R package which provides a wrapper for the `snzts` web service.  It can be installed directly from GitHub using `devtools`:
 

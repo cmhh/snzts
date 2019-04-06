@@ -1,4 +1,4 @@
-# Statistics New Zealand Time Series Data Service - Docker Containers
+# Stats NZ Time Series Data Service - Docker Containers
 
 By far the easiest way to get a service up and running is to use the provided Dockerfiles.  
 

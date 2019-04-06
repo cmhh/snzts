@@ -1,4 +1,4 @@
-# Statistics New Zealand Time Series Data Service - Play Data Service
+# Stats NZ Time Series Data Service - Play Data Service
 
 This repository contains a basic data service for time series data sourced from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/).  You will need [`sbt`](https://www.scala-sbt.org/) to build the project.  To build it, simply run:
 
