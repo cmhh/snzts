@@ -1,4 +1,4 @@
-# Statistics New Zealand Time Series Data Service
+# Stats NZ Time Series Data Service
 
 This repository contains:
 
@@ -7,7 +7,7 @@ This repository contains:
 * `snzscrape` - a simple command-line utility for scraping the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/)
 * `snzts` - source code for the data service, using the Play Framework.
 
-**Note: I work for Stats NZ, and it would not have been possible to reshape the data without arranging for the release of some internally-held metadata.**
+**Note: I work for Stats NZ, and it would not have been possible to reshape the data without arranging for the release of some internally-held metadata.  However, this is _not_ a Stats NZ product.**
 
 ## Overview
 
