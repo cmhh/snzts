@@ -1,4 +1,4 @@
-# Stats NZ Time Series Data Service - Docker Containers
+# Data Service for Public Stats NZ Time Series Data - Docker Containers
 
 By far the easiest way to get a service up and running is to use the provided Dockerfiles.  
 
@@ -48,10 +48,10 @@ Once done, a file called `csv.zip` will appear in the present working directory.
 Using Nginx as a reverse proxy is relatively straightforward.  Simply add the following location directive to your server config:
 
 ```
-   location /snzts/ {
-     proxy_pass http://127.0.0.1:9000/snzts/;
-     proxy_http_version 1.1;
-     proxy_set_header Upgrade $http_upgrade;
-     proxy_set_header Connection "upgrade";
-   }
+location /snzts/ {
+  proxy_pass http://127.0.0.1:9000/snzts/;
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+}
 ```

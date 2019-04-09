@@ -1,4 +1,4 @@
-# Stats NZ Time Series Data Service - R Package
+# Data Service for Public Stats NZ Time Series Data - R Package
 
 This repository contains an R package which provides a wrapper for the `snzts` web service.  It can be installed directly from GitHub using `devtools`:
 
@@ -19,3 +19,7 @@ Obviously, for the package to be useful, there needs to be an instance of the we
 library(snzts)
 set_server("http://localhost:9000/snzts/v1")
 ```
+
+The package provides the same functionality as the web service itself, but could be extended easily enough.  For example, including a Shiny application for browsing available series.
+
+![rstudio](img/rclient.png)
