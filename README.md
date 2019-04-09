@@ -1,4 +1,4 @@
-# Stats NZ Time Series Data Service
+# Data Service for Public Stats NZ Time Series Data
 
 This repository contains:
 
