@@ -1,6 +1,10 @@
-FROM postgis
+FROM postgres:alpine
 
-RUN mkdir -p /tmp/psqldata
+RUN set -ex && \
+  apk add --no-cache --virtual .fetch-deps zip && \
+  apk del .fetch-deps 
+
+RUN mkdir -p /tmp/psqldata 
 
 COPY csv.zip /tmp/psqldata/
 

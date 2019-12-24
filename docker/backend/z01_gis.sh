@@ -4,8 +4,6 @@ cd /tmp/psqldata && unzip csv.zip && cd /
 # create databases and roles
 psql -U postgres -c 'create database snzts;' > /dev/null 2>&1
 psql -U postgres -d snzts -c 'CREATE EXTENSION citext;'
-psql -U postgres -d snzts -c 'CREATE EXTENSION postgis;' > /dev/null 2>&1
-psql -U postgres -d snzts -c 'CREATE EXTENSION postgis_topology;' > /dev/null 2>&1
 
 psql -U postgres -c 'create user webuser;' > /dev/null 2>&1
 psql -U postgres -c "alter user webuser with encrypted password 'webuser';" > /dev/null 2>&1
