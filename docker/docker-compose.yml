@@ -3,12 +3,16 @@ services:
   backend:
     image: "snzts-backend"
     container_name: backend
+    build:
+      context: ./backend
     network_mode: "host"
     ports:
       - 5432:5432
   api:
     image: "snzts-api"
     container_name: api
+    build:
+      context: ./api
     network_mode: "host"
     depends_on:
       - backend
