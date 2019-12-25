@@ -13,7 +13,6 @@ target/universal/snzts-0.1.0.zip
 ```
 
 This archive can be unzipped on any machine with a Java runtime, and the service started by running the `bin/snzts` script (or `snzts.bat` on Windows).  Alternatively, the service can be run in development mode via:
-
 ```
 sbt run
 ```
