@@ -13,7 +13,8 @@ target/universal/snzts-0.1.0.zip
 ```
 
 This archive can be unzipped on any machine with a Java runtime, and the service started by running the `bin/snzts` script (or `snzts.bat` on Windows).  Alternatively, the service can be run in development mode via:
-```
+
+```bash
 sbt run
 ```
 
@@ -48,3 +49,44 @@ To easily run a local copy of the database, a Docker container is provided in `d
 docker build -t snzts-backend docker/backend
 docker run -d --rm --name backend -p 5432:5432 snzts-backend
 ```
+
+If one _really_ wants to build a database from scratch, the schema looks as follows:
+
+![snzts schema](../img/schema01.png)
+
+In addition, a single table view is defined as follows:
+
+```sql
+CREATE 
+  MATERIALIZED VIEW series_info 
+AS  
+SELECT 
+  a.subject_code, b.family_code, b.family_nbr, c.series_code, 
+  a.title_text as subject_title,
+  b.title_text as family_title,
+  b.title_1, b.title_2, b.title_3, b.title_4, b.title_5,
+  c.series_interval_nbr, c.mnth_offset_nbr, c.magnitude_nbr, c.unit_text, 
+  c.code_1, c.code_2, c.code_3, c.code_4, c.code_5, 
+  c.description_1, c.description_2, c.description_3, c.description_4, c.description_5
+FROM
+  subject a
+INNER JOIN
+  family b
+ON
+  a.subject_code = b.subject_code
+INNER JOIN
+  series c
+ON
+  a.subject_code = c.subject_code
+  and b.family_code = c.family_code
+  and b.family_nbr = c.family_nbr
+order by
+  a.subject_code,
+  b.family_code, b.family_nbr,
+  c.series_code
+WITH NO DATA
+```
+
+The implied relations including the table view are as follows:
+
+![snzts schema](../img/schema02.png)
