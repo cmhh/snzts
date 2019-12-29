@@ -16,7 +16,7 @@ workpath <- "work"
 
 create_if_not <- function(dname) {
   if (dir_exists(dname)) TRUE
-  else dir_create(dname, recursive = TRUE)
+  else dir_create(dname, recurse = TRUE)
 }
 
 create_if_not(outpath)
@@ -95,8 +95,7 @@ import_tsm <- function() {
       setNames(tolower(colnames(.))) %>%
       mutate(
         data_value = as.numeric(data_value),
-        status = toupper(substr(status, 1, 1)),
-        units = ifelse(units %in% c("dolalrs", "Dollar", "Dolllars"), "Dollars", units)
+        status = toupper(substr(status, 1, 1))
       )
     if ("magntude" %in% tolower(col))
       res <- res %>%
@@ -156,7 +155,7 @@ data <- import_tsm()
 message("importing metadata...")
 subject <- readRDS(datpath %p% "subject.rds")
 family <- readRDS(datpath %p% "family.rds")
-series <- readRDS(datpath %p% "series.rds")
+series <- readRDS(datpath %p% "series.rds") 
 
 # subset data and metadata -----------------------------------------------------
 message("removing data rows without corresponding metadata...")
@@ -165,7 +164,21 @@ refs <- refs %>% inner_join(series %>% select(series_code), by = "series_code")
 data <- data %>% inner_join(refs, by = "series_code") %>% arrange(series_code, period)
 
 message("removing metadata rows without corresponding data...")
-series <- series %>% inner_join(refs, by = "series_code") %>% arrange(series_code)
+series <- series %>% 
+  inner_join(refs, by = "series_code") %>% 
+  arrange(series_code) %>%
+  mutate(unit_text = toupper(unit_text)) %>%
+  mutate(
+    unit_text = case_when(
+      unit_text %in% c("DOLALRS", "DOLLAR", "DOLLLARS") ~ "DOLLARS", 
+      unit_text %in% c("M3", "CU METRE", "CUBIC M") ~ "M^3",
+      unit_text %in% c("/1000", "/ 1000") ~ "PER MILLE",
+      unit_text %in% c("/ WOMAN") ~ "PER WOMAN",
+      unit_text %in% c("HECTARES") ~ "HA",
+      TRUE ~ unit_text
+    )
+  )
+     
 family_codes <- unique(series %>% select(family_code, family_nbr))
 subject_codes <- unique(series %>% select(subject_code))
 family <- family %>% inner_join(family_codes, by = c("family_code", "family_nbr")) %>% arrange(family_code, family_nbr)
