@@ -93,7 +93,11 @@ import_tsm <- function() {
     res <- res %>% 
       select(!!!rlang::syms(col)) %>% 
       setNames(tolower(colnames(.))) %>%
-      mutate(data_value = as.numeric(data_value))
+      mutate(
+        data_value = as.numeric(data_value),
+        status = toupper(substr(status, 1, 1)),
+        units = ifelse(units %in% c("dolalrs", "Dollar", "Dolllars"), "Dollars", units)
+      )
     if ("magntude" %in% tolower(col))
       res <- res %>%
         rename(magnitude = magntude)
