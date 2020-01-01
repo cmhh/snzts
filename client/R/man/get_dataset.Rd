@@ -4,9 +4,22 @@
 \alias{get_dataset}
 \title{Retrieve time series data}
 \usage{
-get_dataset(subject_codes, family_codes, family_nbrs, series_codes,
-  subject_keywords, family_keywords, series_keywords, interval, offset,
-  limit = 100, drop, head, tail, server = getOption("snzts.url"))
+get_dataset(
+  subject_codes,
+  family_codes,
+  family_nbrs,
+  series_codes,
+  subject_keywords,
+  family_keywords,
+  series_keywords,
+  interval,
+  offset,
+  limit = 100,
+  drop,
+  head,
+  tail,
+  server = getOption("snzts.url")
+)
 }
 \arguments{
 \item{subject_codes}{List of subject codes, e.g. \code{list("HLF", "LCI", "BOP", "CPI")}.}

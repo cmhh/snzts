@@ -4,8 +4,14 @@
 \alias{get_families}
 \title{List families}
 \usage{
-get_families(subject_code, family_code, family_nbr, subject_keywords,
-  family_keywords, server = getOption("snzts.url"))
+get_families(
+  subject_code,
+  family_code,
+  family_nbr,
+  subject_keywords,
+  family_keywords,
+  server = getOption("snzts.url")
+)
 }
 \arguments{
 \item{subject_code}{Subject code, e.g. \code{"HLF"}.}
