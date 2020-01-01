@@ -4,8 +4,7 @@
 \alias{get_subjects}
 \title{List subjects}
 \usage{
-get_subjects(subject_code, subject_keywords,
-  server = getOption("snzts.url"))
+get_subjects(subject_code, subject_keywords, server = getOption("snzts.url"))
 }
 \arguments{
 \item{subject_code}{Subject code, e.g. \code{"HLF"}.}

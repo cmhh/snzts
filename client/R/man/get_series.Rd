@@ -4,10 +4,28 @@
 \alias{get_series}
 \title{Retrieve time series by series codes}
 \usage{
-get_series(series_codes, server = getOption("snzts.url"))
+get_series(
+  series_codes,
+  ...,
+  start,
+  end,
+  head,
+  tail,
+  server = getOption("snzts.url")
+)
 }
 \arguments{
 \item{series_codes}{List of series identifiers, e.g. \code{list("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S")}.}
+
+\item{...}{Series identifiers}
+
+\item{start}{Start date, e.g. \code{"1986.03"}}
+
+\item{end}{End date, e.g. \code{"2019.06"}}
+
+\item{head}{Number of observations to keep at head of series.}
+
+\item{tail}{Number of observations to keep at tail of series.}
 
 \item{server}{Server URL.}
 }
@@ -19,6 +37,9 @@ A data frame containing time series data in long format.  Associated metadata
 Retrieve time series data for a list of series codes.
 }
 \examples{
-x <- get_series(series_codes = c("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S"))
+x <- get_series(
+  series_codes = c("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S"),
+  tail = 12
+)
 attr(x, "metadata")
 }

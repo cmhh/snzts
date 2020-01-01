@@ -152,6 +152,11 @@ get_info <- function(subject_codes, family_codes, family_nbrs, series_codes,
 #' Retrieve time series data for a list of series codes.
 #'
 #' @param series_codes List of series identifiers, e.g. \code{list("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S")}.
+#' @param ... Series identifiers
+#' @param start Start date, e.g. \code{"1986.03"}
+#' @param end End date, e.g. \code{"2019.06"}
+#' @param head Number of observations to keep at head of series.
+#' @param tail Number of observations to keep at tail of series.
 #' @param server Server URL.
 #'
 #' @export
@@ -161,11 +166,23 @@ get_info <- function(subject_codes, family_codes, family_nbrs, series_codes,
 #' (subject title, series title, etc.) is stored in an attribute named \code{metadata}.
 #'
 #' @examples
-#' x <- get_series(series_codes = c("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S"))
+#' x <- get_series(
+#'   series_codes = c("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S"),
+#'   tail = 12
+#' )
 #' attr(x, "metadata")
+#'
+#' y <- get_series("HLFQ.SAA3AZ", "HLFQ.S1A3S", "HLFQ.S4A3S", tail = 12)
 get_series <- function(series_codes,
+                       ...,
+                       start, end, head, tail,
                        server = getOption("snzts.url")) {
-  if (missing(series_codes)) return(NULL)
+  args <- list(...)
+  series_codes <-
+    if(missing(series_codes)) args
+    else append(series_codes, args)
+
+  if (is.null(series_codes)) return(NULL)
   parse_meta <- function(x) {
     d(series_code = x$series_code,
       subject_title = x$subject_title,
@@ -181,27 +198,32 @@ get_series <- function(series_codes,
   parse_data <- function(x) {
     vars <- x$variables
     vals <- sprintf('"%s"', x$outcomes)
-    e    <- lapply(vals, rlang::parse_quosure) %>% setNames(., vars)
+    e    <- setNames(lapply(vals, rlang::parse_quo, rlang::caller_env()), vars)
     d1 <- d(series_code = x$series_code)
-    d2 <- d1 %>%
-      mutate(!!!e)
-    d3 <- d2 %>%
-      inner_join(
-        d(series_code = x$series_code,
-          period = as.numeric(unlist(x$period)),
-          value = as.numeric(unlist(x$value)),
-          status = unlist(x$status)),
-        by = "series_code"
-      )
+    d2 <- dplyr::mutate(d1, !!!e)
+    d3 <- dplyr::inner_join(
+      d2,
+      d(
+        series_code = x$series_code,
+        period = as.numeric(unlist(x$period)),
+        value = as.numeric(unlist(x$value)),
+        status = unlist(x$status)
+      ),
+      by = "series_code"
+    )
   }
 
   query <- sprintf("%s/series?format=json", server)
   query <- appendq(query, series_codes, "seriesCode")
+  query <- appendq(query, start, "start")
+  query <- appendq(query, end, "end")
+  query <- appendq(query, head, "head")
+  query <- appendq(query, tail, "tail")
 
   response <- jsonlite::fromJSON(query, simplifyVector = FALSE)
 
-  res  <- lapply(response, parse_data) %>% dplyr::bind_rows()
-  meta <- lapply(response, parse_meta) %>% dplyr::bind_rows()
+  res  <- dplyr::bind_rows(lapply(response, parse_data))
+  meta <- dplyr::bind_rows(lapply(response, parse_meta))
   attr(res, "metadata") <- meta
   res
 }
@@ -256,18 +278,19 @@ get_dataset <- function(subject_codes, family_codes, family_nbrs, series_codes,
   parse_data <- function(x) {
     vars <- x$variables
     vals <- sprintf('"%s"', x$outcomes)
-    e    <- lapply(vals, rlang::parse_quosure) %>% setNames(., vars)
+    e    <- setNames(lapply(vals, rlang::parse_quo, rlang::caller_env()), vars)
     d1 <- d(series_code = x$series_code)
-    d2 <- d1 %>%
-      mutate(!!!e)
-    d3 <- d2 %>%
-      inner_join(
-        d(series_code = x$series_code,
-          period = as.numeric(unlist(x$period)),
-          value = as.numeric(unlist(x$value)),
-          status = unlist(x$status)),
-        by = "series_code"
-      )
+    d2 <- dplyr::mutate(d1, !!!e)
+    d3 <- dplyr::inner_join(
+      d2,
+      d(
+        series_code = x$series_code,
+        period = as.numeric(unlist(x$period)),
+        value = as.numeric(unlist(x$value)),
+        status = unlist(x$status)
+      ),
+      by = "series_code"
+    )
   }
 
   query <- sprintf("%s/dataset?format=json",
@@ -289,10 +312,10 @@ get_dataset <- function(subject_codes, family_codes, family_nbrs, series_codes,
 
   response <- jsonlite::fromJSON(query, simplifyVector = FALSE)
 
-  res  <- lapply(response, parse_data) %>% dplyr::bind_rows()
-  meta <- lapply(response, parse_meta) %>% dplyr::bind_rows()
+  res  <- dplyr::bind_rows(lapply(response, parse_data))
+  meta <- dplyr::bind_rows(lapply(response, parse_meta))
   attr(res, "metadata") <- meta
 
   cols <- c(colnames(res)[!colnames(res) %in% c("period", "value", "status")], "period", "value", "status")
-  res %>% select(!!!rlang::syms(cols))
+  dplyr::select(res, !!!rlang::syms(cols))
 }
