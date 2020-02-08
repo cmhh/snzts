@@ -17,7 +17,9 @@ import play.api.Configuration
 class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerComponents)(implicit executionContext: ExecutionContext, config: Configuration) 
   extends AbstractController(controllerComponents) {
     
-  private lazy val seriesLimit: Option[Int] = if (config.has("seriesLimit")) Some(config.get[Int]("seriesLimit")) else None
+  private lazy val seriesLimitCSV: Option[Int] = if (config.has("seriesLimitCSV")) Some(config.get[Int]("seriesLimitCSV")) else None
+    
+  private lazy val seriesLimitJSON: Option[Int] = if (config.has("seriesLimitJSON")) Some(config.get[Int]("seriesLimitJSON")) else None
   
   /**
    * Basic search UI.
@@ -34,7 +36,7 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
   }
 
   def getLimit = Action {
-    Ok(s"""{"series_limit":${seriesLimit.getOrElse("null")}}""").as("application/json")
+    Ok(s"""{"series_limit_csv":${seriesLimitCSV.getOrElse("null")},"series_limit_json":${seriesLimitJSON.getOrElse("null")}}""").as("application/json")
   }
 
   /**
@@ -70,9 +72,10 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
    * @param subjectKeyword List of keywords used to subset subjects.
    * @param familyKeyword List of keywords used to subset subjects.
    */
-  def getFamilies(format: Option[Format], 
-                  subjectCode: Option[String],familyCode: Option[String], familyNbr: Option[Int],
-                  subjectKeyword: List[String], familyKeyword: List[String]) = Action.async {
+  def getFamilies(
+    format: Option[Format], subjectCode: Option[String],familyCode: Option[String], familyNbr: Option[Int],
+    subjectKeyword: List[String], familyKeyword: List[String]
+  ) = Action.async {
     val q = snzts.selectFamilies(subjectCode, familyCode, familyNbr, subjectKeyword, familyKeyword)
     format match {
       case Some(Format.CSV) => {
@@ -87,6 +90,46 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
       }
     }
   }
+
+  /**
+   * Return number of matching time series.
+   *
+   * @param format Output format, e.g. `Some(Format.CSV)` or `Some(Format.JSON)`.
+   * @param subjectCode  List of subject codes, e.g. `List("HLF","BLD")`.
+   * @param familyCode List of family codes, e.g. `List("SA")`.
+   * @param familyNbr List of family numbers.
+   * @param seriesCode List of series codes, e.g. `List("HLFQ.SAA1AZ", "HLFQ.SAA2AZ")`.
+   * @param subjectKeyword List of keywords used to subset subjects.
+   * @param familyKeyword List of keywords used to subset families.
+   * @param seriesKeyword List of keywords used to subset series.
+   * @param interval Time series interval, e.g., `Some(1)` for monthly, `Some(3)` for quarterly, and `Some(12)` for annual.
+   * @param offset Start period, e.g., `interval=Some(12)` and `offset=Some(12)` would denote a December year.
+   */
+  def getCount(
+    format: Option[Format], subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], 
+    seriesCode: List[String], subjectKeyword: List[String], familyKeyword: List[String], 
+    seriesKeyword: List[String], interval: Option[Int], offset: Option[Int]
+  ) = Action.async {
+    val q: Future[Int] = 
+      snzts.selectSeriesCount(
+        subjectCode, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
+        subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
+        interval, offset
+      )
+
+    format match {
+      case Some(Format.CSV) => {
+        q.map(s => {
+          Ok(s"count\n${s.toString}")
+        }.as("text/csv"))
+      }
+      case _ => {
+        q.map(s => {
+          Ok(s.toString)
+        }.as("application/json")) 
+      }
+    }    
+  } 
 
   /**
    * Return information about time series.
@@ -104,20 +147,36 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
    * @param limit Keep only `limit` series.
    * @param drop Drop first `offset` series.  Can be used in conjunction with `limit` to emulate pagination.
    */
-  def getInfo(format: Option[Format], subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], seriesCode: List[String], 
-              subjectKeyword: List[String], familyKeyword: List[String], seriesKeyword: List[String],
-              interval: Option[Int], offset: Option[Int], limit: Option[Int], drop: Option[Int]) = Action {
-    val appliedLimit: Option[Int] = (seriesLimit, limit) match {
-      case (Some(m), Some(n)) => Some(math.min(m, n))
-      case (Some(m), None) => Some(m)
-      case (None, Some(n)) => Some(n)
-      case _ => None
+  def getInfo(
+    format: Option[Format], subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], 
+    seriesCode: List[String], subjectKeyword: List[String], familyKeyword: List[String], 
+    seriesKeyword: List[String], interval: Option[Int], offset: Option[Int], limit: Option[Int], drop: Option[Int]
+  ) = Action {
+    val appliedLimit: Option[Int] = format match {
+      case Some(Format.CSV) => {
+        (seriesLimitCSV, limit) match {
+          case (Some(m), Some(n)) => Some(math.min(m, n))
+          case (Some(m), None) => Some(m)
+          case (None, Some(n)) => Some(n)
+          case _ => None
+        }
+      }
+      case _ => {
+        (seriesLimitJSON, limit) match {
+          case (Some(m), Some(n)) => Some(math.min(m, n))
+          case (Some(m), None) => Some(m)
+          case (None, Some(n)) => Some(n)
+          case _ => None
+        }
+      }
     }
 
     val info: Seq[SeriesInfo] = 
-      snzts.selectSeriesInfo2(subjectCode, familyCode.distinct, familyNbr.distinct, seriesCode.distinct, 
-                              subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
-                              interval, offset, appliedLimit, drop)
+      snzts.selectSeriesInfo2(
+        subjectCode, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
+        subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
+        interval, offset, appliedLimit, drop
+      )
 
     format match {
       case Some(Format.CSV) => {
@@ -142,10 +201,10 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
    * @param tail If supplied, include the last `tail` elements of each series.
    * @param title Optional title to be used when format is `Format.CHART`.
    */  
-  def getSeries(format: Option[Format], seriesCode: List[String], 
-                start: Option[String], end: Option[String],
-                head: Option[Int], tail: Option[Int], 
-                title: Option[String]) =  Action {
+  def getSeries(
+    format: Option[Format], seriesCode: List[String], start: Option[String], end: Option[String],
+    head: Option[Int], tail: Option[Int], title: Option[String]
+  ) =  Action {
     val series: Seq[SeriesInfo] = snzts.selectSeriesInfo1(seriesCode.distinct)
     val data: Seq[Data] = snzts.selectData1(seriesCode.distinct, start, end, head, tail)
 
@@ -183,26 +242,44 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
    * @param head If supplied, include the first `head` elements of each series.
    * @param tail If supplied, include the last `tail` elements of each series.
    */
-  def getDataset(format: Option[Format], 
-                 subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], seriesCode: List[String], 
-                 subjectKeyword: List[String], familyKeyword: List[String], seriesKeyword: List[String],
-                 interval: Option[Int], offset: Option[Int],
-                 limit: Option[Int], drop: Option[Int], head: Option[Int], tail: Option[Int]) = Action {
-    val appliedLimit: Option[Int] = (seriesLimit, limit) match {
-      case (Some(m), Some(n)) => Some(math.min(m, n))
-      case (Some(m), None) => Some(m)
-      case (None, Some(n)) => Some(n)
-      case _ => None
+  def getDataset(
+    format: Option[Format], subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], 
+    seriesCode: List[String], subjectKeyword: List[String], familyKeyword: List[String], 
+    seriesKeyword: List[String], interval: Option[Int], offset: Option[Int],
+    limit: Option[Int], drop: Option[Int], head: Option[Int], tail: Option[Int]
+  ) = Action {
+    val appliedLimit: Option[Int] = format match {
+      case Some(Format.CSV) => {
+        (seriesLimitCSV, limit) match {
+          case (Some(m), Some(n)) => Some(math.min(m, n))
+          case (Some(m), None) => Some(m)
+          case (None, Some(n)) => Some(n)
+          case _ => None
+        }
+      }
+      case _ => {
+        (seriesLimitJSON, limit) match {
+          case (Some(m), Some(n)) => Some(math.min(m, n))
+          case (Some(m), None) => Some(m)
+          case (None, Some(n)) => Some(n)
+          case _ => None
+        }
+      }
     }
 
     val series: Seq[SeriesInfo] = 
-      snzts.selectSeriesInfo2(subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct, 
-                              subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
-                              interval, offset, appliedLimit, drop)
+      snzts.selectSeriesInfo2(
+        subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
+        subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
+        interval, offset, appliedLimit, drop
+      )
+
     val data: Seq[Data] = 
-      snzts.selectData2(subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct, 
-                        subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
-                        interval, offset, appliedLimit, drop, head, tail)
+      snzts.selectData2(
+        subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
+        subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
+        interval, offset, appliedLimit, drop, head, tail
+      )
 
     format match {
       case Some(Format.CSV) => {

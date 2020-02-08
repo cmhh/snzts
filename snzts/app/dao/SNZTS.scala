@@ -341,6 +341,70 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
   } 
 
   /**
+   * Select count from `series_info` table.
+   *
+   * @param subjectCodes  List of subject codes, e.g. `List("HLF","BLD")`.
+   * @param familyCodes List of family codes, e.g. `List("SA")`.
+   * @param familyNbrs List of family numbers.
+   * @param seriesCodes List of series codes, e.g. `List("HLFQ.SAA1AZ", "HLFQ.SAA2AZ")`.
+   * @param subjectKeywords List of keywords used to filter by subject, e.g. `List("Labour", "Force")`.  These are joined by `AND`.
+   * @param familyKeywords List of keywords used to filter by family.  These are joined by `AND`.
+   * @param seriesKeywords List of keywords used to filter series--fields searched are titles and class labels.
+   * @param interval Time series interval, e.g., `Some(1)` for monthly, `Some(3)` for quarterly, and `Some(12)` for annual.
+   * @param offset Start period, e.g., `interval=Some(12)` and `offset=Some(12)` would denote a December year.
+   * @param limit Maximum number of unique series objects to return.
+   * @param drop Used in conjunction with `limit` to retrieve a result set in batches.  For example, to retrieve 1001 through 2000, set `limit=Some(1000)` and `drop=Some(1000)`.
+   */
+  def selectSeriesCount(subjectCodes: List[String], familyCodes: List[String], familyNbrs: List[Int], seriesCodes: List[String], 
+                        subjectKeywords: List[String], familyKeywords: List[String], seriesKeywords: List[String],
+                        interval: Option[Int], offset: Option[Int]): Future[Int] = {
+    val q1 = if (subjectCodes.size > 0) {
+      SeriesInfoTable.filter(_.subjectCode.inSet(subjectCodes))
+    } else SeriesInfoTable
+
+    val q2 = if (familyCodes.size > 0) {
+      q1.filter(_.familyCode.inSet(familyCodes))
+    } else q1
+
+    val q3 = if (familyNbrs.size > 0) {
+      q2.filter(_.familyNbr.inSet(familyNbrs))
+    } else q2
+
+    val q4 = if (seriesCodes.size > 0) {
+      q3.filter(_.seriesCode.inSet(seriesCodes))
+    } else q3
+    
+    val q5 = if (subjectKeywords.size > 0)
+      q4.filter { m => subjectKeywords.map(kw => m.subjectTitle.toLowerCase.like(s"%${kw.toLowerCase}%")).reduceLeft(_ && _) }
+    else
+      q4
+    
+    val q6 = if (familyKeywords.size > 0)
+      q5.filter { m => familyKeywords.map(kw => m.familyTitle.toLowerCase.like(s"%${kw.toLowerCase}%")).reduceLeft(_ && _) }
+    else 
+      q5    
+
+    val q7 = if (seriesKeywords.size > 0) {
+      q6.filter { m => seriesKeywords.map(kw => {
+        (m.desc1.toLowerCase like s"%${kw.toLowerCase}%") || (m.desc2.toLowerCase like s"%${kw.toLowerCase}%") || 
+        (m.desc3.toLowerCase like s"%${kw.toLowerCase}%") || (m.desc4.toLowerCase like s"%${kw.toLowerCase}%") || 
+        (m.desc5.toLowerCase like s"%${kw.toLowerCase}%")}).reduceLeft( _ && _)}
+    } else q6
+
+    val q8 = interval match {
+      case Some(i) => q7.filter(_.interval === i)
+      case _ => q7
+    }
+
+    val q9 = offset match {
+      case Some(i) => q8.filter(_.interval === i)
+      case _ => q8
+    }
+
+    db.run(q9.size.result)    
+  } 
+
+  /**
    * Select information from `data` table.
    *
    * @param seriesCodes List of series codes, e.g. `List("HLFQ.SAA1AZ", "HLFQ.SAA2AZ")`.
