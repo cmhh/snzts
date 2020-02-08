@@ -14,7 +14,8 @@
   <div class=example><div class=type>GET</div><div class=url>/v1/limit</div></div>
   
   <pre><code class="json">{
-  "series_limit": 500
+  "series_limit_csv": 50,
+  "series_limit_json": 100
 }</code></pre>
 
   <h1><code>subjects</code></h1>
@@ -320,6 +321,92 @@
     ]
   }
 ]</code></pre>
+
+<h1><code>count</code></h1>
+
+<p>Count individual time series.</p>
+
+<h2>Parameters</h2>
+
+<table class="parameters">
+  <thead>
+      <tr><th class="fixed">Parameter</th><th class="fixed">Optional</th><th class="fixed">Multiple</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>format</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Output format.  One of <code>CSV</code>, or <code>JSON</code>.  Defaults to <code>JSON</code>.</td>
+      </tr>
+      <tr>
+        <td><code>subjectCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Subject code.  For example, <code>HLF</code>, <code>LCI</code>, <code>BOP</code>, <code>CPI</code>, etc.</td>
+      </tr>
+      <tr>
+        <td><code>familyCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Family code.  For example, <code>SA</code>.</td>
+      </tr>
+      <tr>
+        <td><code>familyNbr</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Family number.</td>
+      </tr>
+      <tr>
+        <td><code>seriesCode</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Series code.  For example, <code>HLFQ.SAA1AZ</code>.</td>
+      </tr>
+      <tr>
+        <td><code>subjectKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for subject.</td>
+      </tr>
+      <tr>
+        <td><code>familyKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for family.</td>
+      </tr>
+      <tr>
+        <td><code>seriesKeyword</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10004;</td>
+        <td>Search term for series.</td>
+      </tr>
+      <tr>
+        <td><code>interval</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Interval.  <code>1</code> denotes monthly, <code>3</code> denotes quarterly, and <code>12</code> denotes annual.</td>
+      </tr>
+      <tr>
+        <td><code>offset</code></td>
+        <td class="center">&#10004;</td>
+        <td class="center">&#10007;</td>
+        <td>Offset month.  For example, <code>3</code> denotes the March quarter for quartely data.</td>
+      </tr>
+  </tbody>
+</table>
+
+<h2>Usage</h2>
+
+<p>The basic format is:</p>
+
+<div class=example><div class=type>GET</div><div class=url>/v1/count?format=json&subjectCode=value&subjectCode=value&...&familyCode=value&familyCode=value&...&familyNbr=value&familyNbr=value&...&seriesCode=value&seriesCode=value&...&subjectKeyword=value&subjectKeyword=value&...&familyKeyword=value&familyKeyword=value&...&seriesKeyword=value&seriesKeyword=value&...&interval=value&offset=value</div></div>
+
+<p>For example:</p>
+
+<div class=example><div class=type>GET</div><div class=url>/v1/count?format=json&subjectCode=HLF</div></div>
+
+<pre><code class="json">22867</code></pre>
 
 
   <h1><code>series</code></h1>
