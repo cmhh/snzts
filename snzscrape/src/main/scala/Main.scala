@@ -1,21 +1,18 @@
 package org.cmhh
 
 import org.openqa.selenium.{WebDriver, WebElement}
-
-// import org.openqa.selenium.firefox.FirefoxDriver
-// import org.openqa.selenium.chrome.ChromeDriver
-import org.openqa.selenium.phantomjs.PhantomJSDriver
-
+import org.openqa.selenium.firefox.FirefoxBinary
+import org.openqa.selenium.firefox.FirefoxDriver
+import org.openqa.selenium.firefox.FirefoxOptions
 import java.util.concurrent.TimeUnit
 import java.io.FileOutputStream
 import java.net.URL
 import java.nio.file.{Path, Paths, Files}
 import java.nio.channels.{Channels, FileChannel, ReadableByteChannel}
-
 import scala.collection.mutable.{Set => MSet}
 
 object Utils {
-  def getURL(url: String, path: String) {
+  def getURL(url: String, path: String): Unit = {
     val inc: ReadableByteChannel = Channels.newChannel(new URL(url).openStream())
     val outs: FileOutputStream = new FileOutputStream(path)
     val outc: FileChannel = outs.getChannel()
@@ -45,10 +42,12 @@ object Main extends App {
 
   val s: MSet[String] = MSet[String]()
 
-  // get URLs
-  // val driver: FirefoxDriver = new FirefoxDriver()
-  // val driver: ChromeDriver = new ChromeDriver()
-  val driver: PhantomJSDriver = new PhantomJSDriver()
+  val firefoxBinary: FirefoxBinary = new FirefoxBinary()
+  firefoxBinary.addCommandLineOptions("--headless")
+  val firefoxOptions: FirefoxOptions = new FirefoxOptions()
+  firefoxOptions.setBinary(firefoxBinary)
+  val driver: FirefoxDriver = new FirefoxDriver(firefoxOptions)
+
   driver.get("https://www.stats.govt.nz/large-datasets/csv-files-for-download/")
   driver.manage().timeouts ().implicitlyWait (10, TimeUnit.SECONDS)
   driver.manage().window().maximize()
