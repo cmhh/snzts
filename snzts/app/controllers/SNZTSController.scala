@@ -78,7 +78,7 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
         val res = snzts.familiesCSV(q)
         res.map(x => Ok(x).as("text/csv"))
       case _ => 
-        val res = snzts.familiesCSV(q)
+        val res = snzts.familiesJSON(q)
         res.map(x => Ok(x).as("application/json"))
     }
   }
