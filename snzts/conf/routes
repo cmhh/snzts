@@ -1,6 +1,6 @@
 # Homepage
-GET     /                   controllers.SNZTSController.index
-GET     /v1/docs            controllers.SNZTSController.docs
+GET     /                   controllers.SNZTSController.index()
+GET     /v1/docs            controllers.SNZTSController.docs()
 
 # Data service endpoints
 GET     /v1/hello           controllers.HelloController.get(name: Option[String])

@@ -4,8 +4,8 @@ lazy val root = (project in file(".")).
   settings(
     inThisBuild(List(
       organization := "org.cmhh",
-      scalaVersion := "2.13.3",
-      version      := "0.2.0"
+      scalaVersion := "2.13.4",
+      version      := "0.3.0"
     )),
     name := "snzscrape",
     libraryDependencies += "org.seleniumhq.selenium" % "selenium-java" % "3.141.59",

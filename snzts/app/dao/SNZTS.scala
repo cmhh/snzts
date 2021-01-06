@@ -2,7 +2,7 @@ package dao
 
 import models._
 
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration.Duration
 import javax.inject.Inject
 import play.api.db.slick.DatabaseConfigProvider
@@ -258,11 +258,10 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
    *
    * @param seriesCodes List of series codes, e.g. `List("HLFQ.SAA1AZ", "HLFQ.SAA2AZ")`.
    */
-  def selectSeriesInfo1(seriesCodes: List[String]): Seq[SeriesInfo] = {
+  def selectSeriesInfo1(seriesCodes: List[String]): Future[Seq[SeriesInfo]] = {
     val q1 = SeriesInfoTable.filter(_.seriesCode.inSet(seriesCodes)).sortBy(x => (x.seriesCode))
-
-    // Shouldn't Await, but can't get Action.async working when consuming 2 futures... for now :(
-    Await.result(db.run(q1.result), Duration.Inf)
+    
+    db.run(q1.result)
   }
 
   /**
@@ -283,7 +282,7 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
   def selectSeriesInfo2(subjectCodes: List[String], familyCodes: List[String], familyNbrs: List[Int], seriesCodes: List[String], 
                         subjectKeywords: List[String], familyKeywords: List[String], seriesKeywords: List[String],
                         interval: Option[Int], offset: Option[Int],
-                        limit: Option[Int], drop: Option[Int]): Seq[SeriesInfo] = {
+                        limit: Option[Int], drop: Option[Int]): Future[Seq[SeriesInfo]] = {
     val q1 = if (subjectCodes.size > 0) {
       SeriesInfoTable.filter(_.subjectCode.inSet(subjectCodes))
     } else SeriesInfoTable
@@ -336,8 +335,7 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
 
     val q11 = q10.sortBy(x => (x.seriesCode))
 
-    // Shouldn't Await, but can't get Action.async working when consuming 2 futures... for now :(
-    Await.result(db.run(q11.result), Duration.Inf)      
+    db.run(q11.result)      
   } 
 
   /**
@@ -415,7 +413,7 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
    */
   def selectData1(seriesCodes: List[String], 
                   start: Option[String], end: Option[String], 
-                  head: Option[Int], tail: Option[Int]): Seq[Data] = {
+                  head: Option[Int], tail: Option[Int]): Future[Seq[Data]] = {
     val q1 =  DataTable.filter(_.seriesCode.inSet(seriesCodes))
 
     val q2 = start match {
@@ -436,9 +434,8 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
     }
 
     val q5 = q4.sortBy(x => (x.seriesCode, x.period))
-
-    // Shouldn't Await, but can't get Action.async working when consuming 2 futures... for now :(
-    Await.result(db.run(q5.result), Duration.Inf)              
+    
+    db.run(q5.result)       
   }
 
   /**
@@ -458,11 +455,21 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
    * @param head The number of observations to keep from the start of each series.
    * @param tail The number of observations to keep from the end of each series.
    */
-  def selectData2(subjectCodes: List[String], familyCodes: List[String], familyNbrs: List[Int], seriesCodes: List[String], 
-                  subjectKeywords: List[String], familyKeywords: List[String], seriesKeywords: List[String],
-                  interval: Option[Int], offset: Option[Int],
-                  limit: Option[Int], drop: Option[Int],
-                  head: Option[Int], tail: Option[Int]): Seq[Data] = {
+  def selectData2(
+    subjectCodes: List[String], 
+    familyCodes: List[String], 
+    familyNbrs: List[Int], 
+    seriesCodes: List[String], 
+    subjectKeywords: List[String], 
+    familyKeywords: List[String], 
+    seriesKeywords: List[String],
+    interval: Option[Int], 
+    offset: Option[Int],
+    limit: Option[Int], 
+    drop: Option[Int],
+    head: Option[Int], 
+    tail: Option[Int]
+  ): Future[Seq[Data]] = {
     val q1 = if (subjectCodes.size > 0) {
       SeriesInfoTable.filter(_.subjectCode.inSet(subjectCodes))
     } else SeriesInfoTable
@@ -526,63 +533,69 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
     }
 
     val q13 = q12.sortBy(x => (x.seriesCode, x.period))
-
-    // Shouldn't Await, but can't get Action.async working when consuming 2 futures... for now :(
-    Await.result(db.run(q13.result), Duration.Inf)
+    
+    db.run(q13.result)
   } 
 
   /**
    * Convert a sequence of `Subject` objects to CSV.
    */
-  def subjectsCSV(s: Seq[Subject]): String = 
-    """"subject_code","title_text"""" + "\n" +
-            s.map(s => {s""""${s.subjectCode}","${s.titleText}""""}).mkString("\n")
+  def subjectsCSV(s: Future[Seq[Subject]]): Future[String] = 
+    s.map(x => 
+      """"subject_code","title_text\n"""" + 
+      x.map(y => s""""${y.subjectCode}","${y.titleText}"""").mkString("\n")
+    )
 
   /**
    * Convert a sequence of `Subject` objects to JSON.
    */
-  def subjectsJSON(s: Seq[Subject]): String = 
-    "[" + s.map(s => {s"""{"subject_code":"${s.subjectCode}","title_text":"${s.titleText}"}"""}).mkString(",") + "]"
+  def subjectsJSON(s: Future[Seq[Subject]]): Future[String] = 
+    s.map(x => 
+      "[" + x.map(s => s"""{"subject_code":"${s.subjectCode}","title_text":"${s.titleText}"}""").mkString(",") + "]"
+    )
 
   /**
    * Convert a sequence of `Family` objects to CSV.
    */
-  def familiesCSV(s: Seq[Family]): String = 
-    """"subject_code", "family_code","family_nbr","title_text"""" + "\n" +
-            s.map(s => {s""""${s.subjectCode}","${s.familyCode}",${s.familyNbr},"${s.titleText}""""}).mkString("\n") 
+  def familiesCSV(s: Future[Seq[Family]]): Future[String] = 
+    s.map(x => 
+      """"subject_code", "family_code","family_nbr","title_text"""" + "\n" +
+      x.map(s => s""""${s.subjectCode}","${s.familyCode}",${s.familyNbr},"${s.titleText}"""").mkString("\n")
+    ) 
 
   /**
    * Convert a sequence of `Family` objects to JSON.
    */
-  def familiesJSON(s: Seq[Family]): String =
-    "[" + s.map(s => {
+  def familiesJSON(s: Future[Seq[Family]]): Future[String] =
+    s.map(x => "[" + x.map(s => {
       s"""{"subject_code":"${s.subjectCode}","family_code":"${s.familyCode}","family_nbr":${s.familyNbr},"title_text":"${s.titleText}"}"""
-    }).mkString(",") + "]"
+    }).mkString(",") + "]")
 
   /**
    * Convert a sequence of `SeriesInfo` objects to CSV.
    */
-  def infoCSV(s: Seq[SeriesInfo]): String = {
+  def infoCSV(s: Future[Seq[SeriesInfo]]): Future[String] = {
     val h = """"subject_code","family_code","family_nbr","series_code",
     |"subject_title","family_title","interval","offset","magnitude","unit",
     |"title_1","title_2","title_3","title_4","title_5",
     |"desc_1","desc_2","desc_3","desc_4","desc_5""""
       .stripMargin.replaceAll("\n", "") 
-    h + "\n" +
-      s.map(s => {
+    s.map(x => 
+      h + "\n" +
+      x.map(s => {
         s""""${s.subjectCode}","${s.familyCode}",${s.familyNbr},"${s.seriesCode}",
         |"${s.subjectTitle}","${s.familyTitle}",${s.interval},${s.offset},${s.magnitude},"${s.unit}",
         |"${s.title1}","${s.title2}","${s.title3}","${s.title4}","${s.title5}",
         |"${s.desc1}","${s.desc2}","${s.desc3}","${s.desc4}","${s.desc5}""""
           .stripMargin.replaceAll("\n", "") 
-      }).mkString("\n")
+      }).mkString("\n"))
   }
 
   /**
    * Convert a sequence of `SeriesInfo` objects to JSON.
    */
-  def infoJSON(s: Seq[SeriesInfo]): String = {
-    "[" + s.map(s => {
+  def infoJSON(s: Future[Seq[SeriesInfo]]): Future[String] = {
+    s.map(x => "[" + x.map(s => {
       val variables = List(s.title1, s.title2, s.title3, s.title4, s.title5)
         .flatten.map(s => s""""$s"""").mkString(",")
       val outcomes = List(s.desc1, s.desc2, s.desc3, s.desc4, s.desc5)
@@ -593,13 +606,13 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
       |"interval":${s.interval},"offset":${s.offset},"magnitude":${s.magnitude},"unit":"${s.unit}",
       |"variables":[$variables],"outcomes":[$outcomes]}"""
         .stripMargin.replaceAll("\n", "") 
-    }).mkString(",") + "]"
+    }).mkString(",") + "]")
   }
 
   /**
    * Convert a pair of sequences of `SeriesInfo` and `Data` objects to CSV.
    */
-  def seriesCSV(seriesInfo: Seq[SeriesInfo], data: Seq[Data]): List[String] = {
+  def seriesCSV(seriesInfo: Future[Seq[SeriesInfo]], data: Future[Seq[Data]]): Future[List[String]] = {
     def gets(s: Option[String]): String = s match {
       case Some(x) => s""""$x""""
       case _ => ""
@@ -645,17 +658,20 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
         }
       }
     }
-    if (data.isEmpty) {
-      List[String]()
-    } else {
-      seriesCSV_(seriesInfo, data, seriesInfo.head.seriesCode, List[String](), "", true)
+
+    for {
+      i <- seriesInfo
+      d <- data
+    } yield {
+      if (d.isEmpty) List[String]()
+      else seriesCSV_(i, d, i.head.seriesCode, List[String](), "", true)
     }
   }
 
   /**
    * Convert a pair of sequences of `SeriesInfo` and `Data` objects to JSON.
    */
-  def seriesJSON(seriesInfo: Seq[SeriesInfo], data: Seq[Data]): List[String] = {
+  def seriesJSON(seriesInfo: Future[Seq[SeriesInfo]], data: Future[Seq[Data]]): Future[List[String]] = {
     def getn(n: Option[Double]): String = n match {
       case Some(d) => d.toString
       case _ => "null"
@@ -701,13 +717,13 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
         }
       } 
     }
-    if (seriesInfo.isEmpty | data.isEmpty) List[String]()
-    else seriesJSON_(seriesInfo, data, seriesInfo.head.seriesCode, List[String](), "", "", "", "", true, true)
+
+    for {
+      i <- seriesInfo
+      d <- data
+    } yield {
+      if (i.isEmpty | d.isEmpty) List[String]()
+      else seriesJSON_(i, d, i.head.seriesCode, List[String](), "", "", "", "", true, true)
+    }
   }
 }
-
-/*
-println("")
-println(q4.result.statements.headOption.get)
-println("")
-*/

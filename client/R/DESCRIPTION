@@ -1,10 +1,10 @@
 Package: snzts
 Title: Fetch data from Stats NZ times series service
-Version: 0.0.0.9000
+Version: 0.3.0
 Authors@R: person("Chris", "Hansen", email = "cmhhansen@outlook.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+Description: Fetch data from Stats NZ times series service.
 Depends: 
-  R (>= 3.5.1),
+  R (>= 4.0.3),
   httr,
   jsonlite,
   dplyr,

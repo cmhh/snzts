@@ -1,2 +1,5 @@
 **/.access^
 .Rproj.user
+**/.bsp
+**/.metals
+**/.vscode
