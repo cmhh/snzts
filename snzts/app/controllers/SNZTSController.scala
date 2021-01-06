@@ -47,18 +47,14 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
    * @param subjectKeyword List of keywords used to subset subjects.
    */
   def getSubjects(format: Option[Format], subjectCode: Option[String], subjectKeyword: List[String]) = Action.async {
-    val q = snzts.selectSubjects(subjectCode, subjectKeyword)
+    val q: Future[Seq[Subject]] = snzts.selectSubjects(subjectCode, subjectKeyword)
     format match {
-      case Some(Format.CSV) => {
-        q.map(s => {
-          Ok(snzts.subjectsCSV(s))
-        }.as("text/csv"))
-      }
-      case _ => {
-        q.map(s => {
-          Ok(snzts.subjectsJSON(s))
-        }.as("application/json"))
-      }
+      case Some(Format.CSV) => 
+        val res = snzts.subjectsCSV(q)
+        res.map(x => Ok(x).as("text/csv"))
+      case _ => 
+        val res = snzts.subjectsJSON(q)
+        res.map(x => Ok(x).as("application/json"))
     }
   }
 
@@ -76,18 +72,14 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
     format: Option[Format], subjectCode: Option[String],familyCode: Option[String], familyNbr: Option[Int],
     subjectKeyword: List[String], familyKeyword: List[String]
   ) = Action.async {
-    val q = snzts.selectFamilies(subjectCode, familyCode, familyNbr, subjectKeyword, familyKeyword)
+    val q: Future[Seq[Family]] = snzts.selectFamilies(subjectCode, familyCode, familyNbr, subjectKeyword, familyKeyword)
     format match {
-      case Some(Format.CSV) => {
-        q.map(s => {
-          Ok(snzts.familiesCSV(s))
-        }.as("text/csv"))
-      }
-      case _ => {
-        q.map(s => {
-          Ok(snzts.familiesJSON(s))
-        }.as("application/json")) 
-      }
+      case Some(Format.CSV) => 
+        val res = snzts.familiesCSV(q)
+        res.map(x => Ok(x).as("text/csv"))
+      case _ => 
+        val res = snzts.familiesCSV(q)
+        res.map(x => Ok(x).as("application/json"))
     }
   }
 
@@ -151,7 +143,7 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
     format: Option[Format], subjectCode: List[String], familyCode: List[String], familyNbr: List[Int], 
     seriesCode: List[String], subjectKeyword: List[String], familyKeyword: List[String], 
     seriesKeyword: List[String], interval: Option[Int], offset: Option[Int], limit: Option[Int], drop: Option[Int]
-  ) = Action {
+  ) = Action.async {
     val appliedLimit: Option[Int] = format match {
       case Some(Format.CSV) => {
         (seriesLimitCSV, limit) match {
@@ -171,7 +163,7 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
       }
     }
 
-    val info: Seq[SeriesInfo] = 
+    val info: Future[Seq[SeriesInfo]] = 
       snzts.selectSeriesInfo2(
         subjectCode, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
         subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
@@ -181,11 +173,11 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
     format match {
       case Some(Format.CSV) => {
         val res = snzts.infoCSV(info)
-        Ok(res).as("text/csv")
+        res.map(x => Ok(x).as("text/csv"))
       }
       case _ => {
         val res = snzts.infoJSON(info)
-        Ok(res).as("application/json") 
+        res.map(x => Ok(x).as("application/json"))
       }
     }                    
   } 
@@ -204,22 +196,22 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
   def getSeries(
     format: Option[Format], seriesCode: List[String], start: Option[String], end: Option[String],
     head: Option[Int], tail: Option[Int], title: Option[String]
-  ) =  Action {
-    val series: Seq[SeriesInfo] = snzts.selectSeriesInfo1(seriesCode.distinct)
-    val data: Seq[Data] = snzts.selectData1(seriesCode.distinct, start, end, head, tail)
+  ) =  Action.async {
+    val series: Future[Seq[SeriesInfo]] = snzts.selectSeriesInfo1(seriesCode.distinct)
+    val data: Future[Seq[Data]] = snzts.selectData1(seriesCode.distinct, start, end, head, tail)
 
     format match {
       case Some(Format.CSV) => {
         val res = snzts.seriesCSV(series, data)
-        Ok.chunked(Source(res)).as("text/csv")
+        res.map(x => Ok.chunked(Source(x)).as("text/csv"))
       }
       case Some(Format.CHART) => {
         val res = snzts.seriesJSON(series, data)
-        Ok(views.html.highchart(title, "[" + res.mkString + "]"))
+        res.map(x => Ok(views.html.highchart(title, "[" + x.mkString + "]")))
       }
       case _ => {
         val res = snzts.seriesJSON(series, data)
-        Ok.chunked(Source(List("[") ++ res ++ List("]"))).as("application/json") 
+        res.map(x => Ok.chunked(Source(List("[") ++ x ++ List("]"))).as("application/json"))
       }
     }    
   }
@@ -247,7 +239,7 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
     seriesCode: List[String], subjectKeyword: List[String], familyKeyword: List[String], 
     seriesKeyword: List[String], interval: Option[Int], offset: Option[Int],
     limit: Option[Int], drop: Option[Int], head: Option[Int], tail: Option[Int]
-  ) = Action {
+  ) = Action.async {
     val appliedLimit: Option[Int] = format match {
       case Some(Format.CSV) => {
         (seriesLimitCSV, limit) match {
@@ -267,14 +259,14 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
       }
     }
 
-    val series: Seq[SeriesInfo] = 
+    val series: Future[Seq[SeriesInfo]] = 
       snzts.selectSeriesInfo2(
         subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
         subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
         interval, offset, appliedLimit, drop
       )
 
-    val data: Seq[Data] = 
+    val data: Future[Seq[Data]] = 
       snzts.selectData2(
         subjectCode.distinct, familyCode.distinct, familyNbr.distinct, seriesCode.distinct,
         subjectKeyword.distinct, familyKeyword.distinct, seriesKeyword.distinct,
@@ -284,11 +276,11 @@ class SNZTSController @Inject() (snzts: SNZTS, controllerComponents: ControllerC
     format match {
       case Some(Format.CSV) => {
         val res = snzts.seriesCSV(series, data)
-        Ok.chunked(Source(res)).as("text/csv")
+        res.map(x => Ok.chunked(Source(x)).as("text/csv"))
       }
       case _ => {
         val res = snzts.seriesJSON(series, data)
-        Ok.chunked(Source(List("[") ++ res ++ List("]"))).as("application/json") 
+        res.map(x => Ok.chunked(Source(List("[") ++ x ++ List("]"))).as("application/json"))
       }
     }                    
   } 
