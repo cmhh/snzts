@@ -322,7 +322,7 @@ class SNZTS @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(i
     }
 
     val q9 = offset match {
-      case Some(i) => q8.filter(_.interval === i)
+      case Some(i) => q8.filter(_.offset === i)
       case _ => q8
     }
 
