@@ -1,12 +1,12 @@
-FROM oracle/graalvm-ce:20.3.0-java8 
+FROM ghcr.io/graalvm/graalvm-ce:java11
 
-COPY snzts-0.3.0.zip snzts.zip
+COPY ./snzts/target/universal/snzts-0.3.0.zip snzts.zip
 
-RUN yum install -y unzip && \
+RUN microdnf install -y unzip && \ 
   unzip snzts.zip && \
+  chmod ugo+rwx /snzts-0.3.0 && \
   rm -fR snzts.zip && \
-  yum -y remove unzip && \
-  yum clean all
+  microdnf remove unzip
 
 EXPOSE 9000
 

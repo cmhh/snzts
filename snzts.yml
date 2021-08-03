@@ -1,0 +1,33 @@
+version: "3.5"
+services:
+  backend:
+    image: "snzts-backend"
+    container_name: backend
+    build:
+      context: ./
+      dockerfile: ./docker/backend/Dockerfile
+    environment:
+      - "POSTGRES_PASSWORD=password-1234"
+    networks:
+      - snztsnet
+  api:
+    image: "snzts-api"
+    container_name: api
+    build:
+      context: ./
+      dockerfile: ./docker/api/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "APPLICATION_SECRET=${APPLICATION_SECRET}"
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
+    networks:
+      - snztsnet
+networks:
+  snztsnet:

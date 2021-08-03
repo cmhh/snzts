@@ -4,3 +4,4 @@
 **/.metals
 **/.vscode
 **/*.jar
+sbt

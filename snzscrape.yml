@@ -1,0 +1,14 @@
+version: "3.5"
+services:
+  scraper:
+    image: "snzts-scraper"
+    container_name: scraper
+    build:
+      context: ./
+      dockerfile: docker/scraper/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - ./docker/backend:/work
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro

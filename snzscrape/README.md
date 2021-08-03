@@ -1,6 +1,6 @@
 # Web Scraper for Stats NZ Time Series Data
 
-This repository contains a small [sbt](https://www.scala-sbt.org/) project.  Once compiled, it provides a simple command-line utility, written in Scala, which uses [Selenium](https://www.seleniumhq.org/) to automate the download of files from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/).  Firefox is used throughout.  You will need to download and install Firefox and [geckodriver](https://github.com/mozilla/geckodriver) yourself for this to work.
+This repository contains a small [sbt](https://www.scala-sbt.org/) project.  Once compiled, it provides a simple command-line utility, written in Scala, which uses [Selenium](https://www.seleniumhq.org/) to automate the download of files from the [Stats NZ website](https://www.stats.govt.nz/large-datasets/csv-files-for-download/).  Chrome is used throughout.  You will need to download and install Chrome and [chromedriver](https://chromedriver.chromium.org/) yourself for this to work.
 
 The tool can be run from the sbt shell via:
 

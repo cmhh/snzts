@@ -1,5 +1,6 @@
 name := """snzts"""
 organization := "org.cmhh"
+maintainer := "cmhhansen@outlook.com"
 
 version := "0.3.0"
 

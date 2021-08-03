@@ -1,9 +1,8 @@
 package org.cmhh
 
 import org.openqa.selenium.{WebDriver, WebElement}
-import org.openqa.selenium.firefox.FirefoxBinary
-import org.openqa.selenium.firefox.FirefoxDriver
-import org.openqa.selenium.firefox.FirefoxOptions
+import org.openqa.selenium.chrome.ChromeDriver
+import org.openqa.selenium.chrome.ChromeOptions
 import java.util.concurrent.TimeUnit
 import java.io.FileOutputStream
 import java.net.URL
@@ -42,11 +41,12 @@ object Main extends App {
 
   val s: MSet[String] = MSet[String]()
 
-  val firefoxBinary: FirefoxBinary = new FirefoxBinary()
-  firefoxBinary.addCommandLineOptions("--headless")
-  val firefoxOptions: FirefoxOptions = new FirefoxOptions()
-  firefoxOptions.setBinary(firefoxBinary)
-  val driver: FirefoxDriver = new FirefoxDriver(firefoxOptions)
+  val options: ChromeOptions = new ChromeOptions()
+  options.addArguments("--headless")
+  options.addArguments("--no-sandbox")
+  options.addArguments("--disable-extensions")
+  // options.addArguments(s"""--homedirectory=/tmp/${System.getProperty("user.name")}""")
+  val driver: ChromeDriver = new ChromeDriver(options)
 
   driver.get("https://www.stats.govt.nz/large-datasets/csv-files-for-download/")
   driver.manage().timeouts ().implicitlyWait (10, TimeUnit.SECONDS)
