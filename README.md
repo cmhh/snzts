@@ -36,23 +36,35 @@ export UID=$(id -u)
 export GID=$(id -g)
 ```
 
-We need to scrape the Stats NZ website so data is available to load into our back-end.  To do this, run:
+The compose setup also makes use of a couple of other environment variables&ndash;`PG_PASS` to set an admin password for the PostgreSQL back-end, and `APPLICATION_SECRET` for the front-end.  The `APPLICATION_SECRET` needs a particular format, and can be created manually as follows:
+
+```bash
+export APPLICATION_SECRET="$(head -c 32 /dev/urandom | base64)"
+```
+
+The easiest option is probably just to create a file called `.env` in the root directory with the required variables (and make sure to set the mode to 600):
+
+```bash
+echo "GID=$(id -g)" > .env
+echo "PID=$(id -u)" >> .env
+echo "APPLICATION_SECRET=\"$(head -c 32 /dev/urandom | base64)\"" >> .env
+echo "PG_PASS=\"$(head -c 8 /dev/urandom | base64)\"" >> .env
+chmod 600 .env
+```
+
+Then, we need to scrape the Stats NZ website so data is available to load into our back-end.  To do this, run:
 
 ```bash
 docker-compose -f snzscrape.yml up -d
 ```
 
-Once all prerequisites are satisfied, sa local copy of the service can be started by running:
+Once all prerequisites are satisfied, start local copy of the service can be started by running:
 
 ```bash
 docker-compose -f snzts.yml up -d
 ```
 
-The service will then be accessible at `localhost:9000/snzts`.  Note the application can make use of a secret.  If you want to provide this, make sure the `APPLICATION_SECRET` environment variable is present:
-
-```bash
-export APPLICATION_SECRET="$(head -c 32 /dev/urandom | base64)"
-```
+The service will then be accessible at `localhost:9000/snzts`.  
 
 ![index](img/index.png)
 
@@ -61,3 +73,32 @@ export APPLICATION_SECRET="$(head -c 32 /dev/urandom | base64)"
 ![chart](img/chart.png)
 
 ![dataset](img/dataset.png)
+
+We can stop the service at any time by running:
+
+```bash
+docker-compose -f snzts.yml down
+```
+
+If you want to test this with Nginx, a basic location directive which will work is as follows (not sure about the CORS thing):
+
+```plaintext
+server {
+
+  ...
+
+  location /snzts/ {
+    proxy_pass http://127.0.0.1:9000/snzts/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    if ($request_method = 'GET') {
+      add_header 'Access-Control-Allow-Origin' '*';
+    }
+  }
+
+  ...
+
+}
+
+```

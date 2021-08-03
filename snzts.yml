@@ -7,7 +7,7 @@ services:
       context: ./
       dockerfile: ./docker/backend/Dockerfile
     environment:
-      - "POSTGRES_PASSWORD=password-1234"
+      - "POSTGRES_PASSWORD=${PG_PASS}"
     networks:
       - snztsnet
   api:

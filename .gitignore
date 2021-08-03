@@ -5,3 +5,5 @@
 **/.vscode
 **/*.jar
 sbt
+.env
+docker/backend/csv.zip
