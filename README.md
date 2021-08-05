@@ -1,5 +1,7 @@
 # Data Service for Public Stats NZ Time Series Data
 
+**Note:** I just removed some biggish objects from the commit history, so the repository should now be much smaller when cloned&ndash;around 20MB or so.
+
 This repository contains:
 
 * `snzts` - source code for a time series data service
