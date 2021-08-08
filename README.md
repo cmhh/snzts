@@ -60,7 +60,7 @@ Then, we need to scrape the Stats NZ website so data is available to load into o
 docker-compose -f snzscrape.yml up -d
 ```
 
-Once all prerequisites are satisfied, start local copy of the service can be started by running:
+Once all prerequisites are satisfied, a local copy of the service can be started by running:
 
 ```bash
 docker-compose -f snzts.yml up -d
