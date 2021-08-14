@@ -59,11 +59,13 @@ printf "building indexes...\n"
 psql -U postgres -d snzts -c "create unique index i1 on subject (subject_code)" > /dev/null 2>&1
 psql -U postgres -d snzts -c "create unique index i2 on family (subject_code, family_code, family_nbr)" > /dev/null 2>&1
 psql -U postgres -d snzts -c "create unique index i3 on series (subject_code, family_code, family_nbr, series_code)" > /dev/null 2>&1
-psql -U postgres -d snzts -c "create index i4 on data (series_code)" > /dev/null 2>&1
-psql -U postgres -d snzts -c "create unique index i5 on series_info (subject_code, family_code, family_nbr, series_code)"
+psql -U postgres -d snzts -c "create unique index i4 on series (series_code)" > /dev/null 2>&1
+psql -U postgres -d snzts -c "create index i5 on data (series_code)" > /dev/null 2>&1
 
 printf "refreshing view series_info...\n"
 psql -U postgres -d snzts -c "REFRESH MATERIALIZED VIEW series_info;" > /dev/null 2>&1
+psql -U postgres -d snzts -c "create unique index i6 on series_info (subject_code, family_code, family_nbr, series_code)" > /dev/null 2>&1
+psql -U postgres -d snzts -c "create unique index i7 on series_info (series_code)" > /dev/null 2>&1
 
 # setup permissions
 psql -U postgres -d snzts -c 'grant usage on schema public to webuser;' > /dev/null 2>&1
