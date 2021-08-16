@@ -8,28 +8,26 @@ services:
       dockerfile: ./docker/backend/Dockerfile
     environment:
       - "POSTGRES_PASSWORD=${PG_PASS}"
-    ports:
-      - 5432:5432
     networks:
-      - snztsnet
-  api:
-    image: "snzts-api"
-    container_name: api
+      - postgraphilenet
+  postgraphile:
+    image: "postgraphile"
+    container_name: postgraphile
     build:
       context: ./
-      dockerfile: ./docker/api/Dockerfile
+      dockerfile: ./docker/postgraphile/Dockerfile
     user: ${UID}:${GID}
     volumes:
       - /etc/group:/etc/group:ro
       - /etc/passwd:/etc/passwd:ro
       - /etc/shadow:/etc/shadow:ro
     environment:
-      - "APPLICATION_SECRET=${APPLICATION_SECRET}"
+      - "CONNECTION_STRING=${DB_URI}"
     depends_on:
       - backend
     ports:
-      - 9000:9000
+      - 5000:5000
     networks:
-      - snztsnet
+      - postgraphilenet
 networks:
-  snztsnet:
+  postgraphilenet:

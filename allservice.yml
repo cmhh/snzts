@@ -1,0 +1,75 @@
+version: "3.5"
+services:
+  backend:
+    image: "snzts-backend"
+    container_name: backend
+    build:
+      context: ./
+      dockerfile: ./docker/backend/Dockerfile
+    environment:
+      - "POSTGRES_PASSWORD=${PG_PASS}"
+    ports:
+      - 5432:5432
+    networks:
+      - snztsnet
+  api:
+    image: "snzts-api"
+    container_name: api
+    build:
+      context: ./
+      dockerfile: ./docker/api/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "APPLICATION_SECRET=${APPLICATION_SECRET}"
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
+    networks:
+      - snztsnet
+  postgraphile:
+    image: "postgraphile"
+    container_name: postgraphile
+    build:
+      context: ./
+      dockerfile: ./docker/postgraphile/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "CONNECTION_STRING=${DB_URI}"
+    depends_on:
+      - backend
+    ports:
+      - 5000:5000
+    networks:
+      - allservicenet
+  postgrest:
+    image: "postgrest"
+    container_name: postgrest
+    build:
+      context: ./
+      dockerfile: ./docker/postgrest/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "DB_URI=${DB_URI}"
+      - "DB_SCHEMA=${DB_SCHEMA}"
+      - "DB_ANON_ROLE=${DB_ANON_ROLE}"
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
+    networks:
+      - allservicenet
+networks:
+  allservicenet:
