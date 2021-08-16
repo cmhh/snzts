@@ -1,0 +1,33 @@
+version: "3.5"
+services:
+  backend:
+    image: "snzts-backend"
+    container_name: backend
+    build:
+      context: ./
+      dockerfile: ./docker/backend/Dockerfile
+    environment:
+      - "POSTGRES_PASSWORD=${PG_PASS}"
+    networks:
+      - postgraphilenet
+  postgraphile:
+    image: "postgraphile"
+    container_name: postgraphile
+    build:
+      context: ./
+      dockerfile: ./docker/postgraphile/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "CONNECTION_STRING=${DB_URI}"
+    depends_on:
+      - backend
+    ports:
+      - 5000:5000
+    networks:
+      - postgraphilenet
+networks:
+  postgraphilenet:

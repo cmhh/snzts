@@ -1,0 +1,35 @@
+version: "3.5"
+services:
+  backend:
+    image: "snzts-backend"
+    container_name: backend
+    build:
+      context: ./
+      dockerfile: ./docker/backend/Dockerfile
+    environment:
+      - "POSTGRES_PASSWORD=${PG_PASS}"
+    networks:
+      - postgrestnet
+  postgrest:
+    image: "postgrest"
+    container_name: postgrest
+    build:
+      context: ./
+      dockerfile: ./docker/postgrest/Dockerfile
+    user: ${UID}:${GID}
+    volumes:
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+    environment:
+      - "DB_URI=${DB_URI}"
+      - "DB_SCHEMA=${DB_SCHEMA}"
+      - "DB_ANON_ROLE=${DB_ANON_ROLE}"
+    depends_on:
+      - backend
+    ports:
+      - 9000:9000
+    networks:
+      - postgrestnet
+networks:
+  postgrestnet:
