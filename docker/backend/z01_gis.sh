@@ -71,5 +71,8 @@ psql -U postgres -d snzts -c "create unique index i7 on series_info (series_code
 psql -U postgres -d snzts -c 'grant usage on schema public to webuser;' > /dev/null 2>&1
 psql -U postgres -d snzts -c 'grant select on all tables in schema public to webuser;' > /dev/null 2>&1
 
+# prevent users running long queries...
+psql -U postgres -c "alter role webuser set statement_timeout = '10s';" > /dev/null 2>&1
+
 # remove files
 rm -fR /tmp/psqldata/*.csv

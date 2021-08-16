@@ -28,7 +28,7 @@ services:
     depends_on:
       - backend
     ports:
-      - 9000:9000
+      - 3000:3000
     networks:
       - postgrestnet
 networks:

@@ -22,7 +22,8 @@ services:
       - /etc/passwd:/etc/passwd:ro
       - /etc/shadow:/etc/shadow:ro
     environment:
-      - "CONNECTION_STRING=${DB_URI}"
+      - "DB=${POSTGRAPHILE_DB}"
+      - "BASE=${POSTGRAPHILE_BASE}"
     depends_on:
       - backend
     ports:

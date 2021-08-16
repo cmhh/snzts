@@ -19,10 +19,10 @@ RUN mkdir -p /usr/local/node && \
 EXPOSE 5000
 
 CMD /usr/local/node/bin/postgraphile \
-  -c "${CONNECTION_STRING}" \
+  -c "${DB}" \
   --enhance-graphiql \
   --retry-on-init-fail \
   --host "0.0.0.0" \
-  --graphql /snztsgql/graphql \
-  --graphiql /snztsgql/graphiql && \
+  --graphql ${BASE}/graphql \
+  --graphiql ${BASE}/graphiql && \
   tail -f /dev/null
