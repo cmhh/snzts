@@ -11,7 +11,7 @@ services:
     ports:
       - 5432:5432
     networks:
-      - snztsnet
+      - allservicenet
   api:
     image: "snzts-api"
     container_name: api
@@ -30,7 +30,7 @@ services:
     ports:
       - 9000:9000
     networks:
-      - snztsnet
+      - allservicenet
   postgraphile:
     image: "postgraphile"
     container_name: postgraphile
