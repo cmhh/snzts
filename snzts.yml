@@ -8,6 +8,8 @@ services:
       dockerfile: ./docker/backend/Dockerfile
     environment:
       - "POSTGRES_PASSWORD=${PG_PASS}"
+    ports:
+      - 5432:5432
     networks:
       - snztsnet
   api:
