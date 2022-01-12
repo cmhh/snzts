@@ -1,7 +1,5 @@
 # Data Service for Public Stats NZ Time Series Data
 
-**Note:** I just removed some biggish objects from the commit history, so the repository should now be much smaller when cloned&ndash;around 20MB or so.
-
 This repository contains:
 
 * `snzts` - source code for a time series data service
@@ -103,4 +101,69 @@ server {
 
 }
 
+```
+
+# PostGraphile and PostgREST
+
+Note that the backend database can also be used as the basis for a data service using tools such as [PostGraphile](https://www.graphile.org/postgraphile/) and [PostgREST](https://postgrest.org/en/stable/).  I have created a separate post about that [here](https://cmhh.github.io/2021/2021-08-14-data-services-from-postgres/).  `Dockerfile`s have been provided to demonstrate this, and they can be run at the same time as the `sntzs` service by running:
+
+```bash
+docker-compose -f allservice.yml up -d
+```
+
+To create nice end-points using NGINX for PostGraphile, add something like the following to your config:
+
+```plaintext
+server {
+
+  ...
+
+  location /snztsgql/ {
+    proxy_pass http://127.0.0.1:5000/snztsgql/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+
+  ...
+}
+```
+
+Similarly, to create end-points (you'll still need to do more work to update the OpenAPI description for use with Swagger, etc.) for PostgREST:
+
+```plaintext
+stream {
+
+  ...
+
+  http {
+
+    ...
+
+    upstream postgrest {
+      server localhost:3000;
+      keepalive 64;
+    }
+
+    ...
+  }
+
+  ...
+}
+
+server {
+
+  ...
+
+  location /snztsrest/ {
+    default_type application/json;
+    proxy_hide_header Content-Locatoin;
+    add_header Content-Location /snztsrest/$upstream_http_content_location;
+    proxy_set_header Connection "";
+    proxy_http_version 1.1;
+    proxy_pass http://postgrest/;
+  }
+
+  ...
+}
 ```

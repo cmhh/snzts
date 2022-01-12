@@ -7,7 +7,7 @@ RUN  apt-get update && apt-get -y dist-upgrade && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* 
 
-RUN curl -sL https://github.com/PostgREST/postgrest/releases/download/v8.0.0/postgrest-v8.0.0-linux-x64-static.tar.xz | \
+RUN curl -sL https://github.com/PostgREST/postgrest/releases/download/v9.0.0/postgrest-v9.0.0-linux-static-x64.tar.xz | \
     tar xJvf - -C /usr/local/bin 
 
 EXPOSE 3000
