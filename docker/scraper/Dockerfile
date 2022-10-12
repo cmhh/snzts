@@ -1,18 +1,18 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get update && apt-get --no-install-recommends -y install gnupg software-properties-common && \
-  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
-  add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
-  apt-get update && \
-  apt-get --no-install-recommends -y install \
-    wget curl libssl-dev libssh2-1-dev libssl1.1 libcurl4-gnutls-dev libgit2-dev unzip \
+RUN apt-get update && \
+  apt-get --no-install-recommends -y install gnupg software-properties-common dirmngr wget  \
+    wget curl libssl-dev libssh2-1-dev libssl3 libcurl4-gnutls-dev libgit2-dev unzip \
     openjdk-11-jre \
-    libxml2-dev \
-    r-base r-base-core r-base-dev r-recommended && \
-  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_92.0.4515.107-1_amd64.deb -O chrome.deb && \
-  wget https://chromedriver.storage.googleapis.com/92.0.4515.107/chromedriver_linux64.zip && \
+    libxml2-dev && \
+  wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc && \
+  add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
+  apt-get update && \
+  apt-get --no-install-recommends -y install r-base r-base-core r-base-dev r-recommended && \
+  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_106.0.5249.103-1_amd64.deb -O chrome.deb && \
+  wget https://chromedriver.storage.googleapis.com/106.0.5249.61/chromedriver_linux64.zip && \
   apt install -y ./chrome.deb && \
   unzip chromedriver_linux64.zip && \
   mv chromedriver /usr/local/bin/ && \
@@ -20,9 +20,8 @@ RUN apt-get update && apt-get --no-install-recommends -y install gnupg software-
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* 
 
-RUN R -e "install.packages(c('devtools', 'dplyr', 'data.table', 'fs'), repos='https://cloud.r-project.org')" && \
-  R -e "devtools::install_github('rstats-db/RSQLite')" && \
-  R -e "install.packages(c('sqldf'), repos='https://cloud.r-project.org')"  
+RUN echo "MAKE = make -j8" >> /etc/R/Makeconf && \
+  R -e "install.packages(c('RSQLite', 'dplyr', 'data.table', 'fs', 'sqldf'), repos='https://cran.rstudio.com')" 
 
 COPY ./docker/scraper/data/metadata.zip /data/
 

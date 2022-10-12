@@ -51,7 +51,8 @@ object Main extends App {
   driver.get("https://www.stats.govt.nz/large-datasets/csv-files-for-download/")
   driver.manage().timeouts ().implicitlyWait (10, TimeUnit.SECONDS)
   driver.manage().window().maximize()
-  val links = driver.findElementsByCssSelector("a[download]")
+  // val links = driver.findElementsByCssSelector("a[download]")
+  val links = driver.findElementsByCssSelector("h3.block-document__title > a")
   links.stream().forEach((e: WebElement) => s.add(e.getAttribute("href")))
   driver.close()
 
