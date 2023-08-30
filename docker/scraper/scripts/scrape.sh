@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-cd /tmp 
-java -jar /snzscrape.jar downloads
-R -e "source('/process.R')"
+tmp_dir=$(mktemp -d -t XXXXXXXXXX)
+java -jar snzscrape.jar ${tmp_dir}/downloads
+Rscript --vanilla /process.R ${tmp_dir}/downloads /data /work

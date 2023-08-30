@@ -9,23 +9,22 @@ psql -U postgres -c 'create user webuser;' > /dev/null 2>&1
 psql -U postgres -c "alter user webuser with encrypted password 'webuser';" > /dev/null 2>&1
 psql -U postgres -c 'grant all privileges on database snzts to webuser;' > /dev/null 2>&1
 
-
 # load csv data
 printf "subject...\n"
 psql -U postgres -d snzts -c "CREATE TABLE subject (subject_code citext PRIMARY KEY, title_text citext);" > /dev/null 2>&1
-psql -U postgres -d snzts -c "COPY subject (subject_code, title_text) FROM '/tmp/psqldata/subject.csv' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
+psql -U postgres -d snzts -c "COPY subject (subject_code, title_text) FROM program 'gunzip -c /tmp/psqldata/subject.csv.gz' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
 
 printf "family...\n"
 psql -U postgres -d snzts -c "CREATE TABLE family (subject_code citext REFERENCES subject(subject_code), family_code citext, family_nbr int, title_text citext, title_1 citext, title_2 citext, title_3 citext, title_4 citext, title_5 citext, PRIMARY KEY(family_code, family_nbr));" > /dev/null 2>&1
-psql -U postgres -d snzts -c "COPY family (subject_code, family_code, family_nbr, title_text, title_1, title_2, title_3, title_4, title_5) FROM '/tmp/psqldata/family.csv' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
+psql -U postgres -d snzts -c "COPY family (subject_code, family_code, family_nbr, title_text, title_1, title_2, title_3, title_4, title_5) FROM program 'gunzip -c /tmp/psqldata/family.csv.gz' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
 
 printf "series...\n"
 psql -U postgres -d snzts -c "CREATE TABLE series (subject_code citext REFERENCES subject(subject_code), family_code citext, family_nbr int, series_code citext PRIMARY KEY, series_interval_nbr int, mnth_offset_nbr int, magnitude_nbr int, unit_text citext, code_1 citext, code_2 citext, code_3 citext, code_4 citext, code_5 citext, description_1 citext, description_2 citext, description_3 citext, description_4 citext, description_5 citext, FOREIGN KEY (family_code, family_nbr) REFERENCES family(family_code, family_nbr));" > /dev/null 2>&1
-psql -U postgres -d snzts -c "COPY series (subject_code, family_code, family_nbr, series_code, series_interval_nbr, mnth_offset_nbr, magnitude_nbr, unit_text, code_1, code_2, code_3, code_4, code_5, description_1, description_2, description_3, description_4, description_5) FROM '/tmp/psqldata/series.csv' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
+psql -U postgres -d snzts -c "COPY series (subject_code, family_code, family_nbr, series_code, series_interval_nbr, mnth_offset_nbr, magnitude_nbr, unit_text, code_1, code_2, code_3, code_4, code_5, description_1, description_2, description_3, description_4, description_5) FROM program 'gunzip -c /tmp/psqldata/series.csv.gz' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
 
 printf "data...\n"
 psql -U postgres -d snzts -c "CREATE TABLE data (series_code citext REFERENCES series(series_code), period varchar, value double precision, status citext, m int, n int);" > /dev/null 2>&1
-psql -U postgres -d snzts -c "COPY data (series_code, period, value, status, m, n) FROM '/tmp/psqldata/data.csv' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
+psql -U postgres -d snzts -c "COPY data (series_code, period, value, status, m, n) FROM program 'gunzip -c /tmp/psqldata/data.csv.gz' DELIMITER ',' CSV HEADER;" > /dev/null 2>&1
 
 printf "creating view series_info (series + subject + family)...\n"
 psql -U postgres -d snzts -c "CREATE MATERIALIZED VIEW series_info AS  
@@ -76,3 +75,4 @@ psql -U postgres -c "alter role webuser set statement_timeout = '10s';" > /dev/n
 
 # remove files
 rm -fR /tmp/psqldata/*.csv
+rm -fR /tmp/psqldata/*.csv.gz

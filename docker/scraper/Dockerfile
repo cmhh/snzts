@@ -11,21 +11,19 @@ RUN apt-get update && \
   add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/" && \
   apt-get update && \
   apt-get --no-install-recommends -y install r-base r-base-core r-base-dev r-recommended && \
-  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_106.0.5249.103-1_amd64.deb -O chrome.deb && \
-  wget https://chromedriver.storage.googleapis.com/106.0.5249.61/chromedriver_linux64.zip && \
+  wget https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_116.0.5845.110-1_amd64.deb -O chrome.deb && \
+  wget https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/116.0.5845.96/linux64/chromedriver-linux64.zip && \
   apt install -y ./chrome.deb && \
-  unzip chromedriver_linux64.zip && \
-  mv chromedriver /usr/local/bin/ && \
-  rm /chrome* && \
+  unzip chromedriver-linux64.zip && \
+  mv chromedriver-linux64/chromedriver /usr/local/bin/ && \
+  rm -fR /chrome* && \
   apt-get clean && \
-  rm -rf /var/lib/apt/lists/* 
+  rm -fR /var/lib/apt/lists/* 
 
 RUN echo "MAKE = make -j8" >> /etc/R/Makeconf && \
-  R -e "install.packages(c('RSQLite', 'dplyr', 'data.table', 'fs', 'sqldf'), repos='https://cran.rstudio.com')" 
+  R -e "install.packages(c('data.table', 'bit64'), repos='https://cran.rstudio.com')" 
 
-COPY ./docker/scraper/data/metadata.zip /data/
-
-RUN cd /data && unzip metadata.zip
+COPY ./docker/scraper/data /data
 
 COPY ./snzscrape/target/scala-2.13/snzscrape.jar snzscrape.jar
 

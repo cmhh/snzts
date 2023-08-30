@@ -1,8 +1,9 @@
-FROM ghcr.io/graalvm/graalvm-ce:java11
+FROM ghcr.io/graalvm/graalvm-ce:ol8-java11-22.3.3
 
-COPY ./snzts/target/universal/snzts-0.3.0.zip snzts.zip
+COPY ./snzts/target/universal/snzts-0.3.0.zip /snzts.zip
 
 RUN microdnf install -y unzip && \ 
+  cd / && \
   unzip snzts.zip && \
   chmod ugo+rwx /snzts-0.3.0 && \
   rm -fR snzts.zip && \
