@@ -8,7 +8,7 @@ services:
       dockerfile: docker/scraper/Dockerfile
     user: ${UID}:${GID}
     volumes:
-      - ./docker/backend:/work
-      - /etc/group:/etc/group:ro
-      - /etc/passwd:/etc/passwd:ro
-      - /etc/shadow:/etc/shadow:ro
+      - ./snzscrape_r:/work
+      - ./docker/backend/output:/work/output
+    working_dir: /work
+    command: "Rscript --vanilla R/main.R"

@@ -6,7 +6,7 @@ RUN set -ex && \
 
 RUN mkdir -p /tmp/psqldata 
 
-COPY ./docker/backend/csv.zip /tmp/psqldata/
+COPY ./docker/backend/output/csv.zip /tmp/psqldata/
 
 RUN chmod -R ugo+rwx /tmp/psqldata
 

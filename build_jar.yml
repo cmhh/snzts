@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  buildjar:
+    image: sbt
+    build:
+      context: ./
+      dockerfile: ./docker/sbt/Dockerfile
+    user: "${UID}:${GID}"
+    environment:
+      - COURSIER_CACHE=/.cache/coursier
+    working_dir: /project
+    volumes:
+      - ${HOME}/.cache/coursier:/.cache/coursier
+      - ./snzts:/project
+    tty: true
+    command: ["sbt", "dist"]

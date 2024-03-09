@@ -10,5 +10,10 @@
 **/.vscode
 **/*.jar
 **/csv.zip
+**/*.csv.gz
 **/.env
 **/downloads
+.Rproj.user
+snzscrape.yml.old
+docker/scraper.old
+snzscrape_r/output/*

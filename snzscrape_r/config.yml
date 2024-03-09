@@ -1,0 +1,4 @@
+default:
+  download_directory: "./downloads"
+  output_directory: "./output"
+  url: "https://www.stats.govt.nz/large-datasets/csv-files-for-download/"

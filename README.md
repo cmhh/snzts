@@ -7,29 +7,13 @@ This repository contains:
 * `docker` - Dockerfiles for easy running and deployment of the service
 * `client` - prototype client libraries--just an R package for now
 
-**Note: I work for Stats NZ, and it would not have been possible to reshape the data without arranging for the release of some internally-held metadata.  However, this is _not_ a Stats NZ product.**
+`snzscrape` used Selenium to fetch files from the Stats NZ website.  A set of R scripts exist in `snzscrape_r` which can be used to do this using only R.
+
+**Note: I worked for Stats NZ at the time of creation, and it would not have been possible to reshape the data without arranging for the release of some internally-held metadata.  However, this is _not_ a Stats NZ product.**
 
 # Quick Start
 
-By far and away the easiest way to get everything up and running is to use the provided Docker Compose setup.  First, the `snzscrape` and `snzts` projects need to be built.  These are sbt projects, so sbt needs to be available.  If you don't have sbt already, it will suffice just to fetch a copy and unpack it in the source repository root:
-
-```bash
-curl -sL https://github.com/sbt/sbt/releases/download/v1.5.5/sbt-1.5.5.tgz | tar xzvf - 
-```
-
-Build `snzcrape` by issuing:
-
-```bash
-cd snzscrape && ../sbt/bin/sbt assembly && cd ..
-```
-
-Build `snzts` by issuing: 
-
-```bash
-cd snzts && ../sbt/bin/sbt dist && cd ..
-```
-
-The containers are configured to run as the current user, and to ensure this works correctly, the following environment variables need to be set:
+By far and away the easiest way to get everything up and running is to use the provided Docker Compose setup.  All containers are configured to run as the current user, and to ensure this works correctly, the following environment variables need to be set:
 
 ```bash
 export UID=$(id -u)
@@ -52,19 +36,27 @@ echo "PG_PASS=\"$(head -c 8 /dev/urandom | base64)\"" >> .env
 chmod 600 .env
 ```
 
-Then, we need to scrape the Stats NZ website so data is available to load into our back-end.  To do this, run:
+`snzts` is an sbt project, and this must be built first.  To do this run:
 
 ```bash
-docker-compose -f snzscrape.yml up -d
+docker compose -f build_jar.yml up
 ```
 
-Once all prerequisites are satisfied, a local copy of the service can be started by running:
+To copy all the data from the Stats NZ website and create a zip file we can load to our database:
 
 ```bash
-docker-compose -f snzts.yml up -d
+docker compose -f snzscrape.yml up
 ```
 
-The service will then be accessible at `localhost:9000/snzts`.  
+Then, to get everything up and running, run:
+
+```bash
+docker compose -f snzts.yml up
+```
+
+This will take while since all of the csv data has to be copied into a PostgreSQL database.
+
+Once the database is loaded and everything is up and running, the service will be accessible at `localhost:9000/snzts`.  
 
 ![index](img/index.png)
 
