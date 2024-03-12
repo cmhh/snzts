@@ -43,7 +43,7 @@ links <- rvest::read_html(url) |>
 for (link in links) {
   download.file(
     sprintf("https://www.stats.govt.nz/%s", link), 
-    destfile = sprintf("downloads/%s", filename(link))
+    destfile = sprintf("%s/%s", wd, filename(link))
   )
 }
 
